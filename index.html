@@ -1,54 +1,138 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burger Tapper</title>
+    <title>Тап по бургеру</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f7f7f7;
+            font-family: 'Arial', sans-serif;
+            background-color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
         }
-        #burger {
-            width: 200px;
-            height: 200px;
-            background-image: url('https://kenzorix1337.github.io/burger-tapper/whopper.png');  /* URL вашего изображения */
-            background-size: cover;
-            margin: 50px auto;
-            cursor: pointer;
-        }
-        #score, #level {
-            font-size: 24px;
+
+        #stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 400px;
             margin-top: 20px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        #burger {
+            width: 150px;
+            height: 150px;
+            background-image: url('https://kenzorix1337.github.io/burger-tapper/whopper.png');
+            background-size: cover;
+            margin: 30px;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .button {
+            background-color: #ff9800;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+        }
+
+        .button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #energy-bar {
+            width: 100%;
+            max-width: 400px;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        #energy {
+            height: 20px;
+            background-color: #76c7c0;
+            width: 100%;
         }
     </style>
 </head>
 <body>
-    <h1>Tap the Burger!</h1>
+    <div id="stats">
+        <div id="score">Клики: 0</div>
+        <div id="level">Уровень: 1</div>
+    </div>
+
     <div id="burger"></div>
-    <div id="score">Taps: 0</div>
-    <div id="level">Level: 1</div>
+
+    <div id="energy-bar">
+        <div id="energy"></div>
+    </div>
+
+    <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
 
     <script>
         let taps = 0;
         let level = 1;
-        const tapsForNextLevel = 10;  // Количество тапов для следующего уровня
+        let energy = 3000;
+        let pointsPerClick = 1;
+        let upgradeCost = 50;
+        let tapsForNextLevel = 10;
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
         const levelDisplay = document.getElementById('level');
+        const energyBar = document.getElementById('energy');
+        const upgradeButton = document.getElementById('upgrade');
 
-        burger.addEventListener('click', () => {
-            taps += 1;
-            score.innerText = `Taps: ${taps}`;
-            
-            // Повышение уровня
+        const updateStats = () => {
+            score.innerText = `Клики: ${taps}`;
+            levelDisplay.innerText = `Уровень: ${level}`;
+            energyBar.style.width = `${(energy / 3000) * 100}%`;
+            upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
+            upgradeButton.disabled = taps < upgradeCost;
+        };
+
+        const levelUp = () => {
             if (taps >= level * tapsForNextLevel) {
                 level += 1;
-                levelDisplay.innerText = `Level: ${level}`;
+                tapsForNextLevel *= 1.5;
+                updateStats();
+            }
+        };
+
+        burger.addEventListener('click', () => {
+            if (energy > 0) {
+                taps += pointsPerClick;
+                energy -= 1;
+                levelUp();
+                updateStats();
             }
         });
+
+        upgradeButton.addEventListener('click', () => {
+            if (taps >= upgradeCost) {
+                taps -= upgradeCost;
+                pointsPerClick += 1;
+                upgradeCost *= 2;
+                updateStats();
+            }
+        });
+
+        updateStats();
     </script>
 </body>
 </html>
