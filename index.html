@@ -10,17 +10,15 @@
             text-align: center;
             background-color: #f7f7f7;
         }
-
         #burger {
             width: 200px;
             height: 200px;
-            background-image: url('burger.png');
+            background-image: url('https://kenzorix1337.github.io/burger-tapper/whopper.png');  /* URL вашего изображения */
             background-size: cover;
             margin: 50px auto;
             cursor: pointer;
         }
-
-        #score {
+        #score, #level {
             font-size: 24px;
             margin-top: 20px;
         }
@@ -30,15 +28,26 @@
     <h1>Tap the Burger!</h1>
     <div id="burger"></div>
     <div id="score">Taps: 0</div>
+    <div id="level">Level: 1</div>
 
     <script>
         let taps = 0;
+        let level = 1;
+        const tapsForNextLevel = 10;  // Количество тапов для следующего уровня
+
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
+        const levelDisplay = document.getElementById('level');
 
         burger.addEventListener('click', () => {
             taps += 1;
             score.innerText = `Taps: ${taps}`;
+            
+            // Повышение уровня
+            if (taps >= level * tapsForNextLevel) {
+                level += 1;
+                levelDisplay.innerText = `Level: ${level}`;
+            }
         });
     </script>
 </body>
