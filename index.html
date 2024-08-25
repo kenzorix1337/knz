@@ -6,49 +6,81 @@
     <title>Тап по бургеру</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
+            font-family: 'Arial', sans-serif;
+            background-color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
             margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
+            overflow: hidden;
         }
+
         #stats {
-            margin-top: 20px;
-            font-size: 24px;
-        }
-        #burger {
-            width: 200px;
-            height: 200px;
-            background-image: url('https://kenzorix1337.github.io/burger-tapper/whopper.png');
-            background-size: cover;
-            margin: 30px auto;
-            cursor: pointer;
-        }
-        #energy-bar-container {
-            width: 80%;
-            margin: 20px auto;
-            background-color: #ddd;
-            height: 30px;
-            border-radius: 15px;
-        }
-        #energy-bar {
+            display: flex;
+            justify-content: space-around;
             width: 100%;
-            height: 100%;
-            background-color: #4caf50;
-            border-radius: 15px;
-            text-align: center;
-            line-height: 30px;
-            color: white;
+            max-width: 500px;
+            margin-top: 20px;
+            color: #333;
             font-weight: bold;
         }
-        .button {
-            padding: 10px 20px;
-            font-size: 18px;
-            margin: 20px;
+
+        #burger {
+            width: 40vw;
+            height: 40vw;
+            max-width: 300px;
+            max-height: 300px;
+            background-image: url('whopper.png'); /* Замените на URL вашего изображения */
+            background-size: cover;
+            margin: 30px;
             cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
         }
+
+        .button {
+            background-color: #ff9800;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+        }
+
+        .button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #energy-bar-container {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #energy-bar {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        #energy {
+            height: 20px;
+            background-color: #76c7c0;
+            width: 100%;
+        }
+
         #energy-text {
-            margin-top: -30px;
+            color: #333;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -70,38 +102,30 @@
     <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
 
     <script>
-        const username = prompt('Введите ваше имя:'); // Уникальный идентификатор игрока
-
-        let taps = 0;
-        let level = 1;
-        let energy = 3000;
-        let pointsPerClick = 1;
-        let upgradeCost = 50;
-        let tapsForNextLevel = 10;
-
-        const burger = document.getElementById('burger');
-        const score = document.getElementById('score');
-        const levelDisplay = document.getElementById('level');
-        const energyBar = document.getElementById('energy');
-        const energyText = document.getElementById('energy-text');
-        const upgradeButton = document.getElementById('upgrade');
-
-        const serverUrl = 'http://188.242.240.123:5000';  // Убедитесь, что этот IP совпадает с вашим
+        const username = 'player';  // Задайте уникальное имя пользователя
 
         const updateStats = () => {
-            score.innerText = `Клики: ${taps}`;
-            levelDisplay.innerText = `Уровень: ${level}`;
-            energyBar.style.width = `${(energy / 3000) * 100}%`;
-            energyText.innerText = `Энергия: ${energy}`;
-            upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
-            upgradeButton.disabled = taps < upgradeCost;
+            fetch(`/get_player/${username}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error(data.error);
+                        return;
+                    }
+                    document.getElementById('score').innerText = `Клики: ${data.taps}`;
+                    document.getElementById('level').innerText = `Уровень: ${data.level}`;
+                    document.getElementById('energy').style.width = `${(data.energy / 3000) * 100}%`;
+                    document.getElementById('energy-text').innerText = `Энергия: ${data.energy}`;
+                    document.getElementById('upgrade').innerText = `Улучшить (Стоимость: ${data.upgrade_cost})`;
+                    document.getElementById('upgrade').disabled = data.taps < data.upgrade_cost;
+                });
         };
 
-        const savePlayerData = () => {
-            fetch(`${serverUrl}/save_player`, {
+        const savePlayer = (taps, level, energy, pointsPerClick, upgradeCost, tapsForNextLevel) => {
+            fetch('/save_player', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     username,
@@ -110,61 +134,49 @@
                     energy,
                     points_per_click: pointsPerClick,
                     upgrade_cost: upgradeCost,
-                }),
-            });
+                    taps_for_next_level: tapsForNextLevel
+                })
+            }).then(response => response.json())
+              .then(data => console.log(data));
         };
 
-        const loadPlayerData = async () => {
-            const response = await fetch(`${serverUrl}/get_player`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username }),
-            });
-            if (response.ok) {
-                const data = await response.json();
-                taps = data.taps;
-                level = data.level;
-                energy = data.energy;
-                pointsPerClick = data.points_per_click;
-                upgradeCost = data.upgrade_cost;
-                updateStats();
-            } else {
-                console.log('Игрок не найден, начнём с нуля');
-            }
-        };
-
-        const levelUp = () => {
-            if (taps >= level * tapsForNextLevel) {
-                level += 1;
-                tapsForNextLevel *= 1.5;
-                updateStats();
-                savePlayerData();
-            }
-        };
-
-        burger.addEventListener('click', () => {
-            if (energy > 0) {
-                taps += pointsPerClick;
-                energy -= 1;
-                levelUp();
-                updateStats();
-                savePlayerData();
-            }
+        document.getElementById('burger').addEventListener('click', () => {
+            fetch(`/get_player/${username}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error(data.error);
+                        return;
+                    }
+                    if (data.energy > 0) {
+                        const taps = data.taps + data.points_per_click;
+                        const energy = data.energy - 1;
+                        const level = data.level;
+                        savePlayer(taps, level, energy, data.points_per_click, data.upgrade_cost, data.taps_for_next_level);
+                        updateStats();
+                    }
+                });
         });
 
-        upgradeButton.addEventListener('click', () => {
-            if (taps >= upgradeCost) {
-                taps -= upgradeCost;
-                pointsPerClick += 1;
-                upgradeCost *= 2;
-                updateStats();
-                savePlayerData();
-            }
+        document.getElementById('upgrade').addEventListener('click', () => {
+            fetch(`/get_player/${username}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error(data.error);
+                        return;
+                    }
+                    if (data.taps >= data.upgrade_cost) {
+                        const taps = data.taps - data.upgrade_cost;
+                        const pointsPerClick = data.points_per_click + 1;
+                        const upgradeCost = data.upgrade_cost * 2;
+                        savePlayer(taps, data.level, data.energy, pointsPerClick, upgradeCost, data.taps_for_next_level);
+                        updateStats();
+                    }
+                });
         });
 
-        loadPlayerData();  // Загрузка данных при запуске
+        updateStats();
     </script>
 </body>
 </html>
