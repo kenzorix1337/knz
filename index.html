@@ -32,7 +32,7 @@
             height: 40vw;
             max-width: 300px;
             max-height: 300px;
-            background-image: url('https://username.github.io/repository-name/burger.png'); /* Замените на URL вашего изображения */
+            background-image: url('https://username.github.io/repository-name/burger.png');
             background-size: cover;
             margin: 30px;
             cursor: pointer;
@@ -101,26 +101,7 @@
 
     <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js"></script>
-
     <script>
-        // Ваши настройки Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
-            authDomain: "whopper-a32f7.firebaseapp.com",
-            projectId: "whopper-a32f7",
-            storageBucket: "whopper-a32f7.appspot.com",
-            messagingSenderId: "701387895307",
-            appId: "1:701387895307:web:cc656083f5f0ed1c590d0e",
-            measurementId: "G-PQ6JZEZMEP"
-        };
-
-        // Инициализация Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
         // Переменные для хранения данных
         let taps = 0;
         let level = 1;
@@ -139,41 +120,6 @@
             document.getElementById('upgrade').disabled = taps < upgradeCost;
         };
 
-        // Обновление данных в Firestore
-        const saveData = async () => {
-            try {
-                await db.collection('gameData').doc('userData').set({
-                    taps,
-                    level,
-                    energy,
-                    pointsPerClick,
-                    upgradeCost,
-                    tapsForNextLevel
-                });
-            } catch (error) {
-                console.error('Ошибка сохранения данных:', error);
-            }
-        };
-
-        // Загрузка данных из Firestore
-        const loadData = async () => {
-            try {
-                const doc = await db.collection('gameData').doc('userData').get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    taps = data.taps || 0;
-                    level = data.level || 1;
-                    energy = data.energy || 3000;
-                    pointsPerClick = data.pointsPerClick || 1;
-                    upgradeCost = data.upgradeCost || 50;
-                    tapsForNextLevel = data.tapsForNextLevel || 10;
-                    updateStats();
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки данных:', error);
-            }
-        };
-
         // Обработчик кликов по бургеру
         document.getElementById('burger').addEventListener('click', () => {
             if (energy > 0) {
@@ -184,7 +130,6 @@
                     tapsForNextLevel *= 1.5;
                 }
                 updateStats();
-                saveData();
             }
         });
 
@@ -195,12 +140,10 @@
                 pointsPerClick += 1;
                 upgradeCost *= 2;
                 updateStats();
-                saveData();
             }
         });
 
-        // Загрузка данных при запуске
-        loadData();
+        updateStats();
     </script>
 </body>
 </html>
