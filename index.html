@@ -27,9 +27,9 @@
         }
 
         #burger {
-            width: 150px;
-            height: 150px;
-            background-image: url('https://kenzorix1337.github.io/burger-tapper/whopper.png');
+            width: 250px;
+            height: 250px;
+            background-image: url('https://kenzorix1337.github.io/burger-tapper/whopper.png'); /* Замените на URL вашего изображения */
             background-size: cover;
             margin: 30px;
             cursor: pointer;
@@ -85,12 +85,12 @@
     <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
 
     <script>
-        let taps = 0;
-        let level = 1;
-        let energy = 3000;
-        let pointsPerClick = 1;
-        let upgradeCost = 50;
-        let tapsForNextLevel = 10;
+        let taps = parseInt(localStorage.getItem('taps')) || 0;
+        let level = parseInt(localStorage.getItem('level')) || 1;
+        let energy = parseInt(localStorage.getItem('energy')) || 3000;
+        let pointsPerClick = parseInt(localStorage.getItem('pointsPerClick')) || 1;
+        let upgradeCost = parseInt(localStorage.getItem('upgradeCost')) || 50;
+        let tapsForNextLevel = parseFloat(localStorage.getItem('tapsForNextLevel')) || 10;
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
@@ -104,6 +104,14 @@
             energyBar.style.width = `${(energy / 3000) * 100}%`;
             upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
             upgradeButton.disabled = taps < upgradeCost;
+
+            // Сохранение данных в localStorage
+            localStorage.setItem('taps', taps);
+            localStorage.setItem('level', level);
+            localStorage.setItem('energy', energy);
+            localStorage.setItem('pointsPerClick', pointsPerClick);
+            localStorage.setItem('upgradeCost', upgradeCost);
+            localStorage.setItem('tapsForNextLevel', tapsForNextLevel);
         };
 
         const levelUp = () => {
