@@ -17,11 +17,9 @@
             overflow: hidden;
         }
 
-        #stats, #auth {
+        #stats {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            justify-content: space-around;
             width: 100%;
             max-width: 500px;
             margin-top: 20px;
@@ -84,174 +82,119 @@
             color: #333;
             font-weight: bold;
         }
-
-        .form-container {
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
-    <div id="auth">
-        <div class="form-container">
-            <h2>Регистрация</h2>
-            <input type="text" id="register-username" placeholder="Имя пользователя" />
-            <input type="password" id="register-password" placeholder="Пароль" />
-            <button class="button" id="register-button">Зарегистрироваться</button>
-        </div>
-        <div class="form-container">
-            <h2>Вход</h2>
-            <input type="text" id="login-username" placeholder="Имя пользователя" />
-            <input type="password" id="login-password" placeholder="Пароль" />
-            <button class="button" id="login-button">Войти</button>
-        </div>
-    </div>
-
-    <div id="stats" style="display: none;">
+    <div id="stats">
         <div id="score">Клики: 0</div>
         <div id="level">Уровень: 1</div>
     </div>
 
-    <div id="burger" style="display: none;"></div>
+    <div id="burger"></div>
 
-    <div id="energy-bar-container" style="display: none;">
+    <div id="energy-bar-container">
         <div id="energy-bar">
             <div id="energy"></div>
         </div>
         <div id="energy-text">Энергия: 3000</div>
     </div>
 
-    <button class="button" id="upgrade" style="display: none;">Улучшить (Стоимость: 50)</button>
+    <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
 
     <script>
-        const apiUrl = 'http://188.242.240.123:5000';
+        // Конфигурация Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
+            authDomain: "whopper-a32f7.firebaseapp.com",
+            projectId: "whopper-a32f7",
+            storageBucket: "whopper-a32f7.appspot.com",
+            messagingSenderId: "Y701387895307",
+            appId: "1:701387895307:web:cc656083f5f0ed1c590d0e"
+        };
 
-        const registerButton = document.getElementById('register-button');
-        const loginButton = document.getElementById('login-button');
-        const statsDiv = document.getElementById('stats');
-        const burgerDiv = document.getElementById('burger');
-        const energyBarContainer = document.getElementById('energy-bar-container');
-        const upgradeButton = document.getElementById('upgrade');
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Изначальные данные
+        let taps = 0;
+        let level = 1;
+        let energy = 3000;
+        let pointsPerClick = 1;
+        let upgradeCost = 50;
+        let tapsForNextLevel = 10;
+
+        const burger = document.getElementById('burger');
         const score = document.getElementById('score');
         const levelDisplay = document.getElementById('level');
         const energyBar = document.getElementById('energy');
         const energyText = document.getElementById('energy-text');
-
-        let username = '';
+        const upgradeButton = document.getElementById('upgrade');
 
         const updateStats = () => {
-            fetch(`${apiUrl}/get_player/${username}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        alert(data.error);
-                        return;
-                    }
+            score.innerText = `Клики: ${taps}`;
+            levelDisplay.innerText = `Уровень: ${level}`;
+            energyBar.style.width = `${(energy / 3000) * 100}%`;
+            energyText.innerText = `Энергия: ${energy}`;
+            upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
+            upgradeButton.disabled = taps < upgradeCost;
 
-                    const { taps, level, energy, points_per_click, upgrade_cost, taps_for_next_level } = data;
-
-                    score.innerText = `Клики: ${taps}`;
-                    levelDisplay.innerText = `Уровень: ${level}`;
-                    energyBar.style.width = `${(energy / 3000) * 100}%`;
-                    energyText.innerText = `Энергия: ${energy}`;
-                    upgradeButton.innerText = `Улучшить (Стоимость: ${upgrade_cost})`;
-                    upgradeButton.disabled = taps < upgrade_cost;
-
-                    localStorage.setItem('taps', taps);
-                    localStorage.setItem('level', level);
-                    localStorage.setItem('energy', energy);
-                    localStorage.setItem('pointsPerClick', points_per_click);
-                    localStorage.setItem('upgradeCost', upgrade_cost);
-                    localStorage.setItem('tapsForNextLevel', taps_for_next_level);
-                });
-        };
-
-        const saveStats = () => {
-            fetch(`${apiUrl}/save_player`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username,
-                    taps: parseInt(localStorage.getItem('taps')),
-                    level: parseInt(localStorage.getItem('level')),
-                    energy: parseInt(localStorage.getItem('energy')),
-                    points_per_click: parseInt(localStorage.getItem('pointsPerClick')),
-                    upgrade_cost: parseInt(localStorage.getItem('upgradeCost')),
-                    taps_for_next_level: parseFloat(localStorage.getItem('tapsForNextLevel'))
-                })
+            // Сохранение данных в Firebase
+            database.ref('gameData').set({
+                taps: taps,
+                level: level,
+                energy: energy,
+                pointsPerClick: pointsPerClick,
+                upgradeCost: upgradeCost,
+                tapsForNextLevel: tapsForNextLevel
             });
         };
 
-        const register = () => {
-            const registerUsername = document.getElementById('register-username').value;
-            const registerPassword = document.getElementById('register-password').value;
-
-            fetch(`${apiUrl}/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: registerUsername, password: registerPassword })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Регистрация успешна');
-                } else {
-                    alert(data.error);
-                }
-            });
-        };
-
-        const login = () => {
-            username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-
-            fetch(`${apiUrl}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('auth').style.display = 'none';
-                    statsDiv.style.display = 'flex';
-                    burgerDiv.style.display = 'block';
-                    energyBarContainer.style.display = 'block';
-                    upgradeButton.style.display = 'block';
-                    updateStats();
-                } else {
-                    alert(data.error);
-                }
-            });
-        };
-
-        registerButton.addEventListener('click', register);
-        loginButton.addEventListener('click', login);
-
-        burgerDiv.addEventListener('click', () => {
-            if (parseInt(localStorage.getItem('energy')) > 0) {
-                let taps = parseInt(localStorage.getItem('taps')) + parseInt(localStorage.getItem('pointsPerClick'));
-                let energy = parseInt(localStorage.getItem('energy')) - 1;
-
-                localStorage.setItem('taps', taps);
-                localStorage.setItem('energy', energy);
+        const levelUp = () => {
+            if (taps >= level * tapsForNextLevel) {
+                level += 1;
+                tapsForNextLevel *= 1.5;
                 updateStats();
-                saveStats();
+            }
+        };
+
+        burger.addEventListener('click', () => {
+            if (energy > 0) {
+                taps += pointsPerClick;
+                energy -= 1;
+                levelUp();
+                updateStats();
             }
         });
 
         upgradeButton.addEventListener('click', () => {
-            if (parseInt(localStorage.getItem('taps')) >= parseInt(localStorage.getItem('upgradeCost'))) {
-                let taps = parseInt(localStorage.getItem('taps')) - parseInt(localStorage.getItem('upgradeCost'));
-                let pointsPerClick = parseInt(localStorage.getItem('pointsPerClick')) + 1;
-                let upgradeCost = parseInt(localStorage.getItem('upgradeCost')) * 2;
-
-                localStorage.setItem('taps', taps);
-                localStorage.setItem('pointsPerClick', pointsPerClick);
-                localStorage.setItem('upgradeCost', upgradeCost);
+            if (taps >= upgradeCost) {
+                taps -= upgradeCost;
+                pointsPerClick += 1;
+                upgradeCost *= 2;
                 updateStats();
-                saveStats();
             }
         });
+
+        // Загрузка данных из Firebase при загрузке страницы
+        database.ref('gameData').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                taps = data.taps;
+                level = data.level;
+                energy = data.energy;
+                pointsPerClick = data.pointsPerClick;
+                upgradeCost = data.upgradeCost;
+                tapsForNextLevel = data.tapsForNextLevel;
+                updateStats();
+            }
+        });
+
+        updateStats();
     </script>
 </body>
 </html>
