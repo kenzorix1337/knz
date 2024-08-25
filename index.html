@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burger Tapper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f7f7f7;
+        }
+
+        #burger {
+            width: 200px;
+            height: 200px;
+            background-image: url('burger.png');
+            background-size: cover;
+            margin: 50px auto;
+            cursor: pointer;
+        }
+
+        #score {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tap the Burger!</h1>
+    <div id="burger"></div>
+    <div id="score">Taps: 0</div>
+
+    <script>
+        let taps = 0;
+        const burger = document.getElementById('burger');
+        const score = document.getElementById('score');
+
+        burger.addEventListener('click', () => {
+            taps += 1;
+            score.innerText = `Taps: ${taps}`;
+        });
+    </script>
+</body>
+</html>
