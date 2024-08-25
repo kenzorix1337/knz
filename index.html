@@ -101,116 +101,106 @@
 
     <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js"></script>
+
     <script>
-        // Конфигурация Firebase
+        // Ваши настройки Firebase
         const firebaseConfig = {
-  apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
-  authDomain: "whopper-a32f7.firebaseapp.com",
-  databaseURL: "https://whopper-a32f7-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "whopper-a32f7",
-  storageBucket: "whopper-a32f7.appspot.com",
-  messagingSenderId: "701387895307",
-  appId: "1:701387895307:web:cc656083f5f0ed1c590d0e",
-  measurementId: "G-PQ6JZEZMEP"
+            apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
+            authDomain: "whopper-a32f7.firebaseapp.com",
+            projectId: "whopper-a32f7",
+            storageBucket: "whopper-a32f7.appspot.com",
+            messagingSenderId: "701387895307",
+            appId: "1:701387895307:web:cc656083f5f0ed1c590d0e",
+            measurementId: "G-PQ6JZEZMEP"
         };
 
         // Инициализация Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Инициализация значений
-        let taps = parseInt(localStorage.getItem('taps')) || 0;
-        let level = parseInt(localStorage.getItem('level')) || 1;
-        let energy = parseInt(localStorage.getItem('energy')) || 3000;
-        let pointsPerClick = parseInt(localStorage.getItem('pointsPerClick')) || 1;
-        let upgradeCost = parseInt(localStorage.getItem('upgradeCost')) || 50;
-        let tapsForNextLevel = parseFloat(localStorage.getItem('tapsForNextLevel')) || 10;
+        // Переменные для хранения данных
+        let taps = 0;
+        let level = 1;
+        let energy = 3000;
+        let pointsPerClick = 1;
+        let upgradeCost = 50;
+        let tapsForNextLevel = 10;
 
-        const burger = document.getElementById('burger');
-        const score = document.getElementById('score');
-        const levelDisplay = document.getElementById('level');
-        const energyBar = document.getElementById('energy');
-        const energyText = document.getElementById('energy-text');
-        const upgradeButton = document.getElementById('upgrade');
-
+        // Обновление статистики на странице
         const updateStats = () => {
-            score.innerText = `Клики: ${taps}`;
-            levelDisplay.innerText = `Уровень: ${level}`;
-            energyBar.style.width = `${(energy / 3000) * 100}%`;
-            energyText.innerText = `Энергия: ${energy}`;
-            upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
-            upgradeButton.disabled = taps < upgradeCost;
-
-            // Сохранение данных в localStorage
-            localStorage.setItem('taps', taps);
-            localStorage.setItem('level', level);
-            localStorage.setItem('energy', energy);
-            localStorage.setItem('pointsPerClick', pointsPerClick);
-            localStorage.setItem('upgradeCost', upgradeCost);
-            localStorage.setItem('tapsForNextLevel', tapsForNextLevel);
-
-            // Сохранение данных в Firestore
-            db.collection('gameData').doc('stats').set({
-                taps: taps,
-                level: level,
-                energy: energy,
-                pointsPerClick: pointsPerClick,
-                upgradeCost: upgradeCost,
-                tapsForNextLevel: tapsForNextLevel
-            }).catch((error) => {
-                console.error("Ошибка при сохранении в Firestore: ", error);
-            });
+            document.getElementById('score').innerText = `Клики: ${taps}`;
+            document.getElementById('level').innerText = `Уровень: ${level}`;
+            document.getElementById('energy').style.width = `${(energy / 3000) * 100}%`;
+            document.getElementById('energy-text').innerText = `Энергия: ${energy}`;
+            document.getElementById('upgrade').innerText = `Улучшить (Стоимость: ${upgradeCost})`;
+            document.getElementById('upgrade').disabled = taps < upgradeCost;
         };
 
-        const levelUp = () => {
-            if (taps >= level * tapsForNextLevel) {
-                level += 1;
-                tapsForNextLevel *= 1.5;
-                updateStats();
+        // Обновление данных в Firestore
+        const saveData = async () => {
+            try {
+                await db.collection('gameData').doc('userData').set({
+                    taps,
+                    level,
+                    energy,
+                    pointsPerClick,
+                    upgradeCost,
+                    tapsForNextLevel
+                });
+            } catch (error) {
+                console.error('Ошибка сохранения данных:', error);
             }
         };
 
-        burger.addEventListener('click', () => {
+        // Загрузка данных из Firestore
+        const loadData = async () => {
+            try {
+                const doc = await db.collection('gameData').doc('userData').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    taps = data.taps || 0;
+                    level = data.level || 1;
+                    energy = data.energy || 3000;
+                    pointsPerClick = data.pointsPerClick || 1;
+                    upgradeCost = data.upgradeCost || 50;
+                    tapsForNextLevel = data.tapsForNextLevel || 10;
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
+            }
+        };
+
+        // Обработчик кликов по бургеру
+        document.getElementById('burger').addEventListener('click', () => {
             if (energy > 0) {
                 taps += pointsPerClick;
                 energy -= 1;
-                levelUp();
+                if (taps >= level * tapsForNextLevel) {
+                    level += 1;
+                    tapsForNextLevel *= 1.5;
+                }
                 updateStats();
+                saveData();
             }
         });
 
-        upgradeButton.addEventListener('click', () => {
+        // Обработчик улучшения
+        document.getElementById('upgrade').addEventListener('click', () => {
             if (taps >= upgradeCost) {
                 taps -= upgradeCost;
                 pointsPerClick += 1;
                 upgradeCost *= 2;
                 updateStats();
+                saveData();
             }
         });
 
-        // Загрузка данных из Firestore
-        db.collection('gameData').doc('stats').onSnapshot((doc) => {
-            if (doc.exists) {
-                const data = doc.data();
-                taps = data.taps;
-                level = data.level;
-                energy = data.energy;
-                pointsPerClick = data.pointsPerClick;
-                upgradeCost = data.upgradeCost;
-                tapsForNextLevel = data.tapsForNextLevel;
-                updateStats();
-            } else {
-                // Если данных нет, создаем начальные данные
-                updateStats();
-            }
-        }, (error) => {
-            console.error("Ошибка при загрузке из Firestore: ", error);
-        });
-
-        updateStats();
+        // Загрузка данных при запуске
+        loadData();
     </script>
 </body>
 </html>
