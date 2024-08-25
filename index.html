@@ -102,81 +102,103 @@
     <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
 
     <script>
-        const username = 'player';  // Задайте уникальное имя пользователя
+        const username = prompt("Введите ваше имя пользователя") || "guest";
+
+        let taps = 0;
+        let level = 1;
+        let energy = 3000;
+        let pointsPerClick = 1;
+        let upgradeCost = 50;
+        let tapsForNextLevel = 10;
+
+        const burger = document.getElementById('burger');
+        const score = document.getElementById('score');
+        const levelDisplay = document.getElementById('level');
+        const energyBar = document.getElementById('energy');
+        const energyText = document.getElementById('energy-text');
+        const upgradeButton = document.getElementById('upgrade');
+
+        const fetchPlayerData = async () => {
+            try {
+                const response = await fetch(`http://188.242.240.123:5000/get_player/${username}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    taps = data.taps;
+                    level = data.level;
+                    energy = data.energy;
+                    pointsPerClick = data.points_per_click;
+                    upgradeCost = data.upgrade_cost;
+                    tapsForNextLevel = data.taps_for_next_level;
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке данных игрока:', error);
+            }
+            updateStats();
+        };
+
+        const savePlayerData = async () => {
+            try {
+                const response = await fetch('http://188.242.240.123:5000/save_player', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        taps: taps,
+                        level: level,
+                        energy: energy,
+                        points_per_click: pointsPerClick,
+                        upgrade_cost: upgradeCost,
+                        taps_for_next_level: tapsForNextLevel
+                    })
+                });
+                if (response.ok) {
+                    console.log('Данные игрока сохранены');
+                }
+            } catch (error) {
+                console.error('Ошибка при сохранении данных игрока:', error);
+            }
+        };
 
         const updateStats = () => {
-            fetch(`/get_player/${username}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        console.error(data.error);
-                        return;
-                    }
-                    document.getElementById('score').innerText = `Клики: ${data.taps}`;
-                    document.getElementById('level').innerText = `Уровень: ${data.level}`;
-                    document.getElementById('energy').style.width = `${(data.energy / 3000) * 100}%`;
-                    document.getElementById('energy-text').innerText = `Энергия: ${data.energy}`;
-                    document.getElementById('upgrade').innerText = `Улучшить (Стоимость: ${data.upgrade_cost})`;
-                    document.getElementById('upgrade').disabled = data.taps < data.upgrade_cost;
-                });
+            score.innerText = `Клики: ${taps}`;
+            levelDisplay.innerText = `Уровень: ${level}`;
+            energyBar.style.width = `${(energy / 3000) * 100}%`;
+            energyText.innerText = `Энергия: ${energy}`;
+            upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
+            upgradeButton.disabled = taps < upgradeCost;
+
+            savePlayerData();
         };
 
-        const savePlayer = (taps, level, energy, pointsPerClick, upgradeCost, tapsForNextLevel) => {
-            fetch('/save_player', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username,
-                    taps,
-                    level,
-                    energy,
-                    points_per_click: pointsPerClick,
-                    upgrade_cost: upgradeCost,
-                    taps_for_next_level: tapsForNextLevel
-                })
-            }).then(response => response.json())
-              .then(data => console.log(data));
+        const levelUp = () => {
+            if (taps >= level * tapsForNextLevel) {
+                level += 1;
+                tapsForNextLevel *= 1.5;
+                updateStats();
+            }
         };
 
-        document.getElementById('burger').addEventListener('click', () => {
-            fetch(`/get_player/${username}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        console.error(data.error);
-                        return;
-                    }
-                    if (data.energy > 0) {
-                        const taps = data.taps + data.points_per_click;
-                        const energy = data.energy - 1;
-                        const level = data.level;
-                        savePlayer(taps, level, energy, data.points_per_click, data.upgrade_cost, data.taps_for_next_level);
-                        updateStats();
-                    }
-                });
+        burger.addEventListener('click', () => {
+            if (energy > 0) {
+                taps += pointsPerClick;
+                energy -= 1;
+                levelUp();
+                updateStats();
+            }
         });
 
-        document.getElementById('upgrade').addEventListener('click', () => {
-            fetch(`/get_player/${username}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        console.error(data.error);
-                        return;
-                    }
-                    if (data.taps >= data.upgrade_cost) {
-                        const taps = data.taps - data.upgrade_cost;
-                        const pointsPerClick = data.points_per_click + 1;
-                        const upgradeCost = data.upgrade_cost * 2;
-                        savePlayer(taps, data.level, data.energy, pointsPerClick, upgradeCost, data.taps_for_next_level);
-                        updateStats();
-                    }
-                });
+        upgradeButton.addEventListener('click', () => {
+            if (taps >= upgradeCost) {
+                taps -= upgradeCost;
+                pointsPerClick += 1;
+                upgradeCost *= 2;
+                updateStats();
+            }
         });
 
-        updateStats();
+        fetchPlayerData();
     </script>
 </body>
 </html>
