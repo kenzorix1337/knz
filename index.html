@@ -16,7 +16,7 @@
             margin: 0;
             overflow: hidden;
         }
-        #auth, #game {
+        #register, #login, #game {
             display: none;
         }
         input {
@@ -271,8 +271,7 @@
                     energy: energy,
                     pointsPerClick: pointsPerClick,
                     upgradeCost: upgradeCost,
-                    tapsForNextLevel: tapsForNextLevel,
-                    password: password // Сохранение пароля (НЕ рекомендуется в реальных приложениях)
+                    tapsForNextLevel: tapsForNextLevel
                 }, { merge: true }); // Используйте merge для обновления только нужных полей
                 console.log('Data saved to Firestore');
             } catch (error) {
