@@ -43,7 +43,7 @@
             height: 40vw;
             max-width: 300px;
             max-height: 300px;
-            background-image: url('whoppe.png');
+            background-image: url('https://username.github.io/repository-name/burger.png');
             background-size: cover;
             margin: 30px;
             cursor: pointer;
@@ -64,6 +64,7 @@
             max-width: 500px;
             margin-top: 20px;
             text-align: center;
+            position: relative;
         }
         #energy-bar {
             width: 100%;
@@ -72,15 +73,17 @@
             overflow: hidden;
             margin: 10px 0;
             position: relative;
+            height: 30px; /* Высота полосы */
         }
         #energy {
-            height: 20px;
+            height: 100%; /* Высота полосы */
             background-color: #76c7c0;
             width: 100%;
             border-radius: 20px;
             position: absolute;
             left: 0;
             top: 0;
+            transition: width 0.5s; /* Плавное изменение ширины */
         }
         #energy-text {
             position: absolute;
@@ -89,6 +92,7 @@
             transform: translate(-50%, -50%);
             color: #333;
             font-weight: bold;
+            z-index: 1; /* Показать текст поверх полосы */
         }
     </style>
 </head>
@@ -318,7 +322,7 @@
         const startEnergyRecovery = () => {
             energyInterval = setInterval(() => {
                 if (energy < maxEnergy) {
-                    energy += 4;
+                    energy += 10;
                     if (energy > maxEnergy) {
                         energy = maxEnergy;
                     }
