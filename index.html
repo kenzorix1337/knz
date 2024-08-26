@@ -318,6 +318,13 @@
                 updateStats();
             }
         });
+
+        // Начальное состояние
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded');
+            // Показать форму регистрации по умолчанию
+            registerDiv.style.display = 'block';
+        });
     </script>
 </body>
 </html>
