@@ -32,7 +32,7 @@
             height: 40vw;
             max-width: 300px;
             max-height: 300px;
-            background-image: url('https://username.github.io/repository-name/burger.png');
+            background-image: url('https://username.github.io/repository-name/burger.png'); /* Замените на URL вашего изображения */
             background-size: cover;
             margin: 30px;
             cursor: pointer;
@@ -101,8 +101,30 @@
 
     <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
 
-    <script>
-        // Переменные для хранения данных
+    <!-- Подключение Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
+
+        // Ваши конфигурационные данные Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
+            authDomain: "whopper-a32f7.firebaseapp.com",
+            databaseURL: "https://whopper-a32f7-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "whopper-a32f7",
+            storageBucket: "whopper-a32f7.appspot.com",
+            messagingSenderId: "701387895307",
+            appId: "1:701387895307:web:cc656083f5f0ed1c590d0e",
+            measurementId: "G-PQ6JZEZMEP"
+        };
+
+        // Инициализация Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        // Инициализация переменных
         let taps = 0;
         let level = 1;
         let energy = 3000;
@@ -110,31 +132,84 @@
         let upgradeCost = 50;
         let tapsForNextLevel = 10;
 
+        // Элементы DOM
+        const burger = document.getElementById('burger');
+        const score = document.getElementById('score');
+        const levelDisplay = document.getElementById('level');
+        const energyBar = document.getElementById('energy');
+        const energyText = document.getElementById('energy-text');
+        const upgradeButton = document.getElementById('upgrade');
+
         // Обновление статистики на странице
         const updateStats = () => {
-            document.getElementById('score').innerText = `Клики: ${taps}`;
-            document.getElementById('level').innerText = `Уровень: ${level}`;
-            document.getElementById('energy').style.width = `${(energy / 3000) * 100}%`;
-            document.getElementById('energy-text').innerText = `Энергия: ${energy}`;
-            document.getElementById('upgrade').innerText = `Улучшить (Стоимость: ${upgradeCost})`;
-            document.getElementById('upgrade').disabled = taps < upgradeCost;
+            score.innerText = `Клики: ${taps}`;
+            levelDisplay.innerText = `Уровень: ${level}`;
+            energyBar.style.width = `${(energy / 3000) * 100}%`;
+            energyText.innerText = `Энергия: ${energy}`;
+            upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
+            upgradeButton.disabled = taps < upgradeCost;
+            saveToFirestore();
         };
 
-        // Обработчик кликов по бургеру
-        document.getElementById('burger').addEventListener('click', () => {
+        // Функция для уровня
+        const levelUp = () => {
+            if (taps >= level * tapsForNextLevel) {
+                level += 1;
+                tapsForNextLevel *= 1.5;
+                updateStats();
+            }
+        };
+
+        // Функция для записи данных в Firestore
+        const saveToFirestore = async () => {
+            try {
+                await setDoc(doc(db, 'stats', 'userStats'), {
+                    taps: taps,
+                    level: level,
+                    energy: energy,
+                    pointsPerClick: pointsPerClick,
+                    upgradeCost: upgradeCost,
+                    tapsForNextLevel: tapsForNextLevel
+                });
+                console.log('Данные успешно сохранены в Firestore');
+            } catch (error) {
+                console.error('Ошибка при сохранении данных в Firestore', error);
+            }
+        };
+
+        // Функция для получения данных из Firestore
+        const loadFromFirestore = async () => {
+            try {
+                const docRef = doc(db, 'stats', 'userStats');
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    taps = data.taps || 0;
+                    level = data.level || 1;
+                    energy = data.energy || 3000;
+                    pointsPerClick = data.pointsPerClick || 1;
+                    upgradeCost = data.upgradeCost || 50;
+                    tapsForNextLevel = data.tapsForNextLevel || 10;
+                    updateStats();
+                } else {
+                    console.log('Документ не существует');
+                }
+            } catch (error) {
+                console.error('Ошибка при получении данных из Firestore', error);
+            }
+        };
+
+        // Слушатели событий
+        burger.addEventListener('click', () => {
             if (energy > 0) {
                 taps += pointsPerClick;
                 energy -= 1;
-                if (taps >= level * tapsForNextLevel) {
-                    level += 1;
-                    tapsForNextLevel *= 1.5;
-                }
+                levelUp();
                 updateStats();
             }
         });
 
-        // Обработчик улучшения
-        document.getElementById('upgrade').addEventListener('click', () => {
+        upgradeButton.addEventListener('click', () => {
             if (taps >= upgradeCost) {
                 taps -= upgradeCost;
                 pointsPerClick += 1;
@@ -143,7 +218,8 @@
             }
         });
 
-        updateStats();
+        // Загрузка данных при запуске
+        loadFromFirestore();
     </script>
 </body>
 </html>
