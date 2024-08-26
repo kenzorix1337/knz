@@ -43,7 +43,7 @@
             height: 40vw;
             max-width: 300px;
             max-height: 300px;
-            background-image: url('whoppe.png');
+            background-image: url('https://username.github.io/repository-name/burger.png');
             background-size: cover;
             margin: 30px;
             cursor: pointer;
@@ -179,7 +179,15 @@
                     return;
                 }
                 // Сохранение нового пользователя
-                await setDoc(docRef, { password: password, taps: 0, level: 1, energy: 3000, pointsPerClick: 1, upgradeCost: 50, tapsForNextLevel: 10 });
+                await setDoc(docRef, {
+                    password: password, 
+                    taps: 0, 
+                    level: 1, 
+                    energy: 3000, 
+                    pointsPerClick: 1, 
+                    upgradeCost: 50, 
+                    tapsForNextLevel: 10
+                });
                 document.getElementById('registerMessage').innerText = 'Вы зарегистрированы!';
                 registerDiv.style.display = 'none';
                 loginDiv.style.display = 'block';
