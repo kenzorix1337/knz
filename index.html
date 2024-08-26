@@ -412,6 +412,13 @@
                 updateStats();
             }
         });
+
+        // Периодическое восстановление энергии, даже когда игрок не в игре
+        const energyRestorationInterval = setInterval(() => {
+            if (document.getElementById('game').style.display === 'block') {
+                restoreEnergy();
+            }
+        }, 1000);
     </script>
 </body>
 </html>
