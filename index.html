@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тап по бургеру</title>
+    <title>Регистрация и Вход</title>
     <style>
-        /* Ваши стили */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #e0e0e0;
@@ -17,38 +16,48 @@
             margin: 0;
             overflow: hidden;
         }
-        #register, #login, #reset {
-            margin-bottom: 20px;
-        }
-        #game {
+        #auth, #game {
             display: none;
+        }
+        input {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .button {
+            background-color: #ff9800;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
         #burger {
             width: 40vw;
             height: 40vw;
             max-width: 300px;
             max-height: 300px;
-            background-image: url('https://username.github.io/repository-name/burger.png'); /* Замените на URL вашего изображения */
+            background-image: url('https://username.github.io/repository-name/burger.png');
             background-size: cover;
             margin: 30px;
             cursor: pointer;
             border-radius: 50%;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
         }
-        .button {
-            background-color: #ff9800;
-            color: white;
-            padding: 10px 20px;
-            margin: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+        #stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 20px;
+            color: #333;
             font-weight: bold;
-        }
-        .button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
         }
         #energy-bar-container {
             width: 100%;
@@ -79,8 +88,10 @@
     <div id="register">
         <h2>Регистрация</h2>
         <input type="text" id="regNickname" placeholder="Введите никнейм">
+        <input type="password" id="regPassword" placeholder="Введите пароль">
         <button id="registerBtn" class="button">Зарегистрироваться</button>
         <p id="registerMessage"></p>
+        <button id="gotoLoginBtn" class="button">Уже есть аккаунт? Войти</button>
     </div>
 
     <!-- Вход -->
@@ -90,15 +101,7 @@
         <input type="password" id="loginPassword" placeholder="Введите пароль">
         <button id="loginBtn" class="button">Войти</button>
         <p id="loginMessage"></p>
-    </div>
-
-    <!-- Сброс пароля -->
-    <div id="reset">
-        <h2>Восстановление пароля</h2>
-        <input type="text" id="resetNickname" placeholder="Введите никнейм">
-        <input type="text" id="resetPhrase" placeholder="Введите фразу">
-        <button id="resetBtn" class="button">Показать пароль</button>
-        <p id="resetMessage"></p>
+        <button id="gotoRegisterBtn" class="button">Нет аккаунта? Зарегистрироваться</button>
     </div>
 
     <!-- Игра -->
@@ -124,12 +127,11 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
+        // Ваши настройки Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
             authDomain: "whopper-a32f7.firebaseapp.com",
-            databaseURL: "https://whopper-a32f7-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "whopper-a32f7",
             storageBucket: "whopper-a32f7.appspot.com",
             messagingSenderId: "701387895307",
@@ -139,35 +141,48 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const auth = getAuth(app);
 
-        const registerBtn = document.getElementById('registerBtn');
-        const loginBtn = document.getElementById('loginBtn');
-        const resetBtn = document.getElementById('resetBtn');
+        // Переключение между формами
+        const registerDiv = document.getElementById('register');
+        const loginDiv = document.getElementById('login');
         const gameDiv = document.getElementById('game');
 
-        // Функция генерации случайного пароля из 20 символов
-        const generatePassword = () => {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+';
-            let password = '';
-            for (let i = 0; i < 20; i++) {
-                password += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return password;
-        };
+        const gotoLoginBtn = document.getElementById('gotoLoginBtn');
+        const gotoRegisterBtn = document.getElementById('gotoRegisterBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const loginBtn = document.getElementById('loginBtn');
+
+        gotoRegisterBtn.addEventListener('click', () => {
+            loginDiv.style.display = 'none';
+            registerDiv.style.display = 'block';
+        });
+
+        gotoLoginBtn.addEventListener('click', () => {
+            registerDiv.style.display = 'none';
+            loginDiv.style.display = 'block';
+        });
 
         // Регистрация
         registerBtn.addEventListener('click', async () => {
             const nickname = document.getElementById('regNickname').value;
-            if (!nickname) {
-                document.getElementById('registerMessage').innerText = 'Введите никнейм';
+            const password = document.getElementById('regPassword').value;
+            if (!nickname || !password) {
+                document.getElementById('registerMessage').innerText = 'Введите никнейм и пароль';
                 return;
             }
-            const password = generatePassword(); // Генерация пароля
             try {
-                await createUserWithEmailAndPassword(auth, `${nickname}@example.com`, password);
-                await setDoc(doc(db, 'users', nickname), { password: password });
-                document.getElementById('registerMessage').innerText = `Вы зарегистрированы! Ваш пароль: ${password}`;
+                // Проверка на существование пользователя
+                const docRef = doc(db, 'users', nickname);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    document.getElementById('registerMessage').innerText = 'Никнейм уже занят';
+                    return;
+                }
+                // Сохранение нового пользователя
+                await setDoc(docRef, { password: password, taps: 0, level: 1, energy: 3000, pointsPerClick: 1, upgradeCost: 50, tapsForNextLevel: 10 });
+                document.getElementById('registerMessage').innerText = 'Вы зарегистрированы!';
+                registerDiv.style.display = 'none';
+                loginDiv.style.display = 'block';
             } catch (error) {
                 document.getElementById('registerMessage').innerText = 'Ошибка регистрации: ' + error.message;
             }
@@ -182,35 +197,24 @@
                 return;
             }
             try {
-                await signInWithEmailAndPassword(auth, `${nickname}@example.com`, password);
-                gameDiv.style.display = 'block';
+                const docRef = doc(db, 'users', nickname);
+                const docSnap = await getDoc(docRef);
+                if (!docSnap.exists()) {
+                    document.getElementById('loginMessage').innerText = 'Пользователь не найден';
+                    return;
+                }
+                const data = docSnap.data();
+                if (data.password !== password) {
+                    document.getElementById('loginMessage').innerText = 'Неверный пароль';
+                    return;
+                }
                 document.getElementById('loginMessage').innerText = 'Вход выполнен успешно!';
-                userId = nickname; // Установка идентификатора пользователя
+                loginDiv.style.display = 'none';
+                gameDiv.style.display = 'block';
+                userId = nickname;
                 loadFromFirestore();
             } catch (error) {
                 document.getElementById('loginMessage').innerText = 'Ошибка входа: ' + error.message;
-            }
-        });
-
-        // Восстановление пароля
-        resetBtn.addEventListener('click', async () => {
-            const nickname = document.getElementById('resetNickname').value;
-            const phrase = document.getElementById('resetPhrase').value;
-            if (!nickname || !phrase) {
-                document.getElementById('resetMessage').innerText = 'Введите никнейм и фразу';
-                return;
-            }
-            try {
-                const userDoc = doc(db, 'users', nickname);
-                const docSnap = await getDoc(userDoc);
-                if (docSnap.exists() && docSnap.data().password === phrase) {
-                    // Отображение пароля
-                    document.getElementById('resetMessage').innerText = `Ваш пароль: ${docSnap.data().password}`;
-                } else {
-                    document.getElementById('resetMessage').innerText = 'Неверный никнейм или фраза';
-                }
-            } catch (error) {
-                document.getElementById('resetMessage').innerText = 'Ошибка восстановления пароля: ' + error.message;
             }
         });
 
