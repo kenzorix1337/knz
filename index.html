@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #b3b3b3;
+            background-color: #e0e0e0;
             background-image: url('123.png'); /* Замените на путь к вашему PNG изображению */
             background-size: cover;
             background-position: center;
@@ -21,12 +21,22 @@
         }
         #register, #login, #game {
             display: none;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        h2 {
+            margin-bottom: 20px;
         }
         input {
             padding: 10px;
             margin: 5px;
             border-radius: 5px;
             border: 1px solid #ccc;
+            width: 80%;
+            max-width: 300px;
         }
         .button {
             background-color: #ff9800;
@@ -36,6 +46,9 @@
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+            margin: 10px;
+            width: 80%;
+            max-width: 300px;
         }
         .button:disabled {
             background-color: #cccccc;
@@ -46,7 +59,7 @@
             height: 40vw;
             max-width: 300px;
             max-height: 300px;
-            background-image: url('whoppe.png');
+            background-image: url('https://username.github.io/repository-name/burger.png');
             background-size: cover;
             margin: 30px;
             cursor: pointer;
@@ -110,7 +123,7 @@
 </head>
 <body>
     <!-- Регистрация -->
-    <div id="register">
+    <div id="register" style="display: block;"> <!-- Начально отображаем форму регистрации -->
         <h2>Регистрация</h2>
         <input type="text" id="regNickname" placeholder="Введите никнейм">
         <input type="password" id="regPassword" placeholder="Введите пароль">
@@ -215,7 +228,7 @@
                     upgradeCost: 50,
                     tapsForNextLevel: 10
                 });
-                document.getElementById('registerMessage').innerText = 'Вы зарегистрированы!';
+                document.getElementById('registerMessage').innerText = 'Регистрация успешна!';
                 registerDiv.style.display = 'none';
                 loginDiv.style.display = 'block';
             } catch (error) {
@@ -232,7 +245,6 @@
                 return;
             }
             try {
-                // Проверка пользователя
                 const docRef = doc(db, 'users', nickname);
                 const docSnap = await getDoc(docRef);
                 if (!docSnap.exists() || docSnap.data().password !== password) {
@@ -332,7 +344,7 @@
         // Восстановление энергии
         const restoreEnergy = () => {
             if (energy < maxEnergy) {
-                energy = Math.min(energy + 3, maxEnergy);
+                energy = Math.min(energy + 10, maxEnergy);
                 updateStats();
             }
         };
