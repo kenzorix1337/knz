@@ -52,10 +52,14 @@
             margin: 10px;
             width: 80%;
             max-width: 300px;
+            transition: background-color 0.3s, transform 0.1s;
         }
         .button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
+        }
+        .button:active {
+            transform: scale(0.95);
         }
         #burger {
             width: 50vw;
@@ -124,6 +128,19 @@
             font-weight: bold;
             z-index: 1; /* Показать текст поверх полосы */
         }
+        .hitmarker {
+            position: absolute;
+            background-color: #ff5722;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            font-size: 14px;
+            font-weight: bold;
+            display: none;
+            z-index: 2;
+        }
     </style>
 </head>
 <body>
@@ -170,7 +187,7 @@
     <!-- Подключение Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
         // Ваши настройки Firebase
         const firebaseConfig = {
@@ -215,14 +232,7 @@
                 return;
             }
             try {
-                // Проверка на существование пользователя
                 const docRef = doc(db, 'users', nickname);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    document.getElementById('registerMessage').innerText = 'Никнейм уже занят';
-                    return;
-                }
-                // Сохранение нового пользователя
                 await setDoc(docRef, {
                     password: password,
                     taps: 0,
@@ -231,7 +241,8 @@
                     maxEnergy: 3000,
                     pointsPerClick: 1,
                     upgradeCost: 50,
-                    tapsForNextLevel: 10
+                    tapsForNextLevel: 10,
+                    lastEnergyUpdate: new Date().toISOString()
                 });
                 document.getElementById('registerMessage').innerText = 'Регистрация успешна!';
                 registerDiv.style.display = 'none';
@@ -284,6 +295,11 @@
         const maxEnergyText = document.getElementById('max-energy-text');
         const upgradeButton = document.getElementById('upgrade');
 
+        const hitmarkerContainer = document.createElement('div');
+        hitmarkerContainer.style.position = 'absolute';
+        hitmarkerContainer.style.pointerEvents = 'none';
+        document.body.appendChild(hitmarkerContainer);
+
         const updateStats = () => {
             score.innerText = `Клики: ${taps}`;
             levelDisplay.innerText = `Уровень: ${level}`;
@@ -315,7 +331,8 @@
                     maxEnergy: maxEnergy,
                     pointsPerClick: pointsPerClick,
                     upgradeCost: upgradeCost,
-                    tapsForNextLevel: tapsForNextLevel
+                    tapsForNextLevel: tapsForNextLevel,
+                    lastEnergyUpdate: new Date().toISOString()
                 }, { merge: true }); // Используем merge: true, чтобы обновлять только измененные поля
                 console.log('Data saved to Firestore');
             } catch (error) {
@@ -337,6 +354,10 @@
                     pointsPerClick = data.pointsPerClick || 1;
                     upgradeCost = data.upgradeCost || 50;
                     tapsForNextLevel = data.tapsForNextLevel || 10;
+                    const lastEnergyUpdate = data.lastEnergyUpdate ? new Date(data.lastEnergyUpdate) : new Date();
+                    const now = new Date();
+                    const timeDiff = Math.max(0, (now - lastEnergyUpdate) / 1000); // Время в секундах
+                    energy = Math.min(maxEnergy, energy + Math.floor(timeDiff * 3)); // Восстановление энергии
                     updateStats();
                 } else {
                     console.log('Document does not exist');
@@ -355,14 +376,31 @@
         };
 
         // Восстанавливаем энергию каждую секунду
-        setInterval(restoreEnergy, 1000); 
+        setInterval(restoreEnergy, 1000);
 
-        burger.addEventListener('click', () => {
+        const showHitMarker = (x, y, points) => {
+            const hitmarker = document.createElement('div');
+            hitmarker.className = 'hitmarker';
+            hitmarker.innerText = `+${points}`;
+            hitmarker.style.left = `${x}px`;
+            hitmarker.style.top = `${y}px`;
+            hitmarkerContainer.appendChild(hitmarker);
+            hitmarker.style.display = 'block';
+            setTimeout(() => hitmarker.remove(), 1000); // Удаление хитмаркера через 1 секунду
+        };
+
+        burger.addEventListener('click', (e) => {
             if (energy > 0) {
                 taps += pointsPerClick;
                 energy -= 1;
                 levelUp();
                 updateStats();
+                
+                // Добавляем хитмаркер
+                const rect = burger.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                showHitMarker(x, y, pointsPerClick);
             }
         });
 
