@@ -87,7 +87,7 @@
     <div id="login">
         <h2>Вход</h2>
         <input type="text" id="loginNickname" placeholder="Введите никнейм">
-        <input type="text" id="loginPhrase" placeholder="Введите фразу">
+        <input type="password" id="loginPassword" placeholder="Введите пароль">
         <button id="loginBtn" class="button">Войти</button>
         <p id="loginMessage"></p>
     </div>
@@ -146,10 +146,14 @@
         const resetBtn = document.getElementById('resetBtn');
         const gameDiv = document.getElementById('game');
 
-        // Функция генерации случайной фразы
-        const generatePhrase = () => {
-            const words = ["apple", "banana", "cherry", "date", "elderberry", "fig", "grape", "honeydew", "kiwi", "lemon"];
-            return Array.from({ length: 10 }, () => words[Math.floor(Math.random() * words.length)]).join(' ');
+        // Функция генерации случайного пароля из 20 символов
+        const generatePassword = () => {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+';
+            let password = '';
+            for (let i = 0; i < 20; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
         };
 
         // Регистрация
@@ -159,11 +163,11 @@
                 document.getElementById('registerMessage').innerText = 'Введите никнейм';
                 return;
             }
-            const password = generatePhrase(); // Генерация фразы как пароля
+            const password = generatePassword(); // Генерация пароля
             try {
                 await createUserWithEmailAndPassword(auth, `${nickname}@example.com`, password);
                 await setDoc(doc(db, 'users', nickname), { password: password });
-                document.getElementById('registerMessage').innerText = `Вы зарегистрированы! Фраза для входа: ${password}`;
+                document.getElementById('registerMessage').innerText = `Вы зарегистрированы! Ваш пароль: ${password}`;
             } catch (error) {
                 document.getElementById('registerMessage').innerText = 'Ошибка регистрации: ' + error.message;
             }
@@ -172,23 +176,17 @@
         // Вход
         loginBtn.addEventListener('click', async () => {
             const nickname = document.getElementById('loginNickname').value;
-            const phrase = document.getElementById('loginPhrase').value;
-            if (!nickname || !phrase) {
-                document.getElementById('loginMessage').innerText = 'Введите никнейм и фразу';
+            const password = document.getElementById('loginPassword').value;
+            if (!nickname || !password) {
+                document.getElementById('loginMessage').innerText = 'Введите никнейм и пароль';
                 return;
             }
             try {
-                const userDoc = doc(db, 'users', nickname);
-                const docSnap = await getDoc(userDoc);
-                if (docSnap.exists() && docSnap.data().password === phrase) {
-                    await signInWithEmailAndPassword(auth, `${nickname}@example.com`, phrase);
-                    gameDiv.style.display = 'block';
-                    document.getElementById('loginMessage').innerText = 'Вход выполнен успешно!';
-                    userId = nickname; // Установка идентификатора пользователя
-                    loadFromFirestore();
-                } else {
-                    document.getElementById('loginMessage').innerText = 'Неверный никнейм или фраза';
-                }
+                await signInWithEmailAndPassword(auth, `${nickname}@example.com`, password);
+                gameDiv.style.display = 'block';
+                document.getElementById('loginMessage').innerText = 'Вход выполнен успешно!';
+                userId = nickname; // Установка идентификатора пользователя
+                loadFromFirestore();
             } catch (error) {
                 document.getElementById('loginMessage').innerText = 'Ошибка входа: ' + error.message;
             }
@@ -216,6 +214,7 @@
             }
         });
 
+        // Игра
         let userId = '';
         let taps = 0;
         let level = 1;
