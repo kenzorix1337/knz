@@ -7,7 +7,10 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #e0e0e0;
+            background-color: #b3b3b3;
+            background-image: url('123.png'); /* Замените на путь к вашему PNG изображению */
+            background-size: cover;
+            background-position: center;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -43,7 +46,7 @@
             height: 40vw;
             max-width: 300px;
             max-height: 300px;
-            background-image: url('https://username.github.io/repository-name/burger.png');
+            background-image: url('whoppe.png');
             background-size: cover;
             margin: 30px;
             cursor: pointer;
@@ -94,6 +97,15 @@
             font-weight: bold;
             z-index: 1; /* Показать текст поверх полосы */
         }
+        #max-energy-text {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #333;
+            font-weight: bold;
+            z-index: 1; /* Показать текст поверх полосы */
+        }
     </style>
 </head>
 <body>
@@ -130,6 +142,7 @@
             <div id="energy-bar">
                 <div id="energy"></div>
                 <div id="energy-text">Энергия: 3000</div>
+                <div id="max-energy-text">Макс: 3000</div>
             </div>
         </div>
 
@@ -206,7 +219,7 @@
                 registerDiv.style.display = 'none';
                 loginDiv.style.display = 'block';
             } catch (error) {
-                document.getElementById('registerMessage').innerText = 'Ошибка регистрации: ' + error.message;
+                document.getElementById('registerMessage').innerText = 'Ошибка регистрации';
             }
         });
 
@@ -219,24 +232,20 @@
                 return;
             }
             try {
+                // Проверка пользователя
                 const docRef = doc(db, 'users', nickname);
                 const docSnap = await getDoc(docRef);
-                if (!docSnap.exists()) {
-                    document.getElementById('loginMessage').innerText = 'Пользователь не найден';
+                if (!docSnap.exists() || docSnap.data().password !== password) {
+                    document.getElementById('loginMessage').innerText = 'Неверный никнейм или пароль';
                     return;
                 }
-                const data = docSnap.data();
-                if (data.password !== password) {
-                    document.getElementById('loginMessage').innerText = 'Неверный пароль';
-                    return;
-                }
-                document.getElementById('loginMessage').innerText = 'Вход выполнен успешно!';
+                document.getElementById('loginMessage').innerText = 'Вход успешен!';
                 loginDiv.style.display = 'none';
                 gameDiv.style.display = 'block';
                 userId = nickname;
                 loadFromFirestore();
             } catch (error) {
-                document.getElementById('loginMessage').innerText = 'Ошибка входа: ' + error.message;
+                document.getElementById('loginMessage').innerText = 'Ошибка входа';
             }
         });
 
@@ -249,13 +258,13 @@
         let pointsPerClick = 1;
         let upgradeCost = 50;
         let tapsForNextLevel = 10;
-        let energyInterval;
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
         const levelDisplay = document.getElementById('level');
         const energyBar = document.getElementById('energy');
         const energyText = document.getElementById('energy-text');
+        const maxEnergyText = document.getElementById('max-energy-text');
         const upgradeButton = document.getElementById('upgrade');
 
         const updateStats = () => {
@@ -263,6 +272,7 @@
             levelDisplay.innerText = `Уровень: ${level}`;
             energyBar.style.width = `${(energy / maxEnergy) * 100}%`;
             energyText.innerText = `Энергия: ${energy}`;
+            maxEnergyText.innerText = `Макс: ${maxEnergy}`;
             upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
             upgradeButton.disabled = taps < upgradeCost;
 
@@ -289,7 +299,7 @@
                     pointsPerClick: pointsPerClick,
                     upgradeCost: upgradeCost,
                     tapsForNextLevel: tapsForNextLevel
-                }, { merge: true }); // Используйте merge для обновления только нужных полей
+                });
                 console.log('Data saved to Firestore');
             } catch (error) {
                 console.error('Error saving data:', error);
@@ -319,17 +329,15 @@
             }
         };
 
-        const startEnergyRecovery = () => {
-            energyInterval = setInterval(() => {
-                if (energy < maxEnergy) {
-                    energy += 10;
-                    if (energy > maxEnergy) {
-                        energy = maxEnergy;
-                    }
-                    updateStats();
-                }
-            }, 1000);
+        // Восстановление энергии
+        const restoreEnergy = () => {
+            if (energy < maxEnergy) {
+                energy = Math.min(energy + 3, maxEnergy);
+                updateStats();
+            }
         };
+
+        setInterval(restoreEnergy, 1000); // Восстанавливать энергию каждую секунду
 
         burger.addEventListener('click', () => {
             if (energy > 0) {
@@ -345,21 +353,10 @@
                 taps -= upgradeCost;
                 pointsPerClick += 1;
                 upgradeCost *= 2;
-                maxEnergy += 500;
-                energy = Math.min(energy, maxEnergy); // Убедитесь, что текущая энергия не превышает максимальную
+                maxEnergy += 500; // Увеличение максимальной энергии при улучшении
                 updateStats();
             }
         });
-
-        // Начальное состояние
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('Page loaded');
-            // Показать форму регистрации по умолчанию
-            registerDiv.style.display = 'block';
-        });
-
-        // Начать восстановление энергии
-        startEnergyRecovery();
     </script>
 </body>
 </html>
