@@ -271,8 +271,9 @@
                     energy: energy,
                     pointsPerClick: pointsPerClick,
                     upgradeCost: upgradeCost,
-                    tapsForNextLevel: tapsForNextLevel
-                });
+                    tapsForNextLevel: tapsForNextLevel,
+                    password: password // Сохранение пароля (НЕ рекомендуется в реальных приложениях)
+                }, { merge: true }); // Используйте merge для обновления только нужных полей
                 console.log('Data saved to Firestore');
             } catch (error) {
                 console.error('Error saving data:', error);
