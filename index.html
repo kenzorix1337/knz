@@ -68,16 +68,22 @@
         #energy-bar {
             width: 100%;
             background-color: #ddd;
-            border-radius: 10px;
+            border-radius: 20px;
             overflow: hidden;
             margin: 10px 0;
+            position: relative;
         }
         #energy {
             height: 20px;
             background-color: #76c7c0;
             width: 100%;
+            border-radius: 20px;
         }
         #energy-text {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
             color: #333;
             font-weight: bold;
         }
@@ -116,8 +122,8 @@
         <div id="energy-bar-container">
             <div id="energy-bar">
                 <div id="energy"></div>
+                <div id="energy-text">Энергия: 3000</div>
             </div>
-            <div id="energy-text">Энергия: 3000</div>
         </div>
 
         <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
@@ -180,12 +186,13 @@
                 }
                 // Сохранение нового пользователя
                 await setDoc(docRef, {
-                    password: password, 
-                    taps: 0, 
-                    level: 1, 
-                    energy: 3000, 
-                    pointsPerClick: 1, 
-                    upgradeCost: 50, 
+                    password: password,
+                    taps: 0,
+                    level: 1,
+                    energy: 3000,
+                    maxEnergy: 3000,
+                    pointsPerClick: 1,
+                    upgradeCost: 50,
                     tapsForNextLevel: 10
                 });
                 document.getElementById('registerMessage').innerText = 'Вы зарегистрированы!';
@@ -231,9 +238,11 @@
         let taps = 0;
         let level = 1;
         let energy = 3000;
+        let maxEnergy = 3000;
         let pointsPerClick = 1;
         let upgradeCost = 50;
         let tapsForNextLevel = 10;
+        let energyInterval;
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
@@ -245,7 +254,7 @@
         const updateStats = () => {
             score.innerText = `Клики: ${taps}`;
             levelDisplay.innerText = `Уровень: ${level}`;
-            energyBar.style.width = `${(energy / 3000) * 100}%`;
+            energyBar.style.width = `${(energy / maxEnergy) * 100}%`;
             energyText.innerText = `Энергия: ${energy}`;
             upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
             upgradeButton.disabled = taps < upgradeCost;
@@ -269,6 +278,7 @@
                     taps: taps,
                     level: level,
                     energy: energy,
+                    maxEnergy: maxEnergy,
                     pointsPerClick: pointsPerClick,
                     upgradeCost: upgradeCost,
                     tapsForNextLevel: tapsForNextLevel
@@ -289,6 +299,7 @@
                     taps = data.taps || 0;
                     level = data.level || 1;
                     energy = data.energy || 3000;
+                    maxEnergy = data.maxEnergy || 3000;
                     pointsPerClick = data.pointsPerClick || 1;
                     upgradeCost = data.upgradeCost || 50;
                     tapsForNextLevel = data.tapsForNextLevel || 10;
@@ -299,6 +310,18 @@
             } catch (error) {
                 console.error('Error loading data:', error);
             }
+        };
+
+        const startEnergyRecovery = () => {
+            energyInterval = setInterval(() => {
+                if (energy < maxEnergy) {
+                    energy += 10;
+                    if (energy > maxEnergy) {
+                        energy = maxEnergy;
+                    }
+                    updateStats();
+                }
+            }, 1000);
         };
 
         burger.addEventListener('click', () => {
@@ -315,6 +338,8 @@
                 taps -= upgradeCost;
                 pointsPerClick += 1;
                 upgradeCost *= 2;
+                maxEnergy += 500;
+                energy = Math.min(energy, maxEnergy); // Убедитесь, что текущая энергия не превышает максимальную
                 updateStats();
             }
         });
@@ -325,6 +350,9 @@
             // Показать форму регистрации по умолчанию
             registerDiv.style.display = 'block';
         });
+
+        // Начать восстановление энергии
+        startEnergyRecovery();
     </script>
 </body>
 </html>
