@@ -354,7 +354,8 @@
             }
         };
 
-        setInterval(restoreEnergy, 1000); // Восстанавливать энергию каждую секунду
+        // Восстанавливаем энергию каждую секунду
+        setInterval(restoreEnergy, 1000); 
 
         burger.addEventListener('click', () => {
             if (energy > 0) {
