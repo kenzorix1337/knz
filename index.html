@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #f0f0f0;
+            background-color: #e0e0e0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -16,75 +16,55 @@
             margin: 0;
             overflow: hidden;
         }
-
-        #auth-container, #game-container {
+        #auth, #game {
             display: none;
-            max-width: 400px;
-            width: 100%;
-            margin: 20px;
-            padding: 20px;
-            border-radius: 8px;
-            background-color: #ffffff;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
         }
-
-        h2 {
-            margin-top: 0;
-            color: #333;
-        }
-
         input {
-            width: calc(100% - 22px);
             padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
+            margin: 5px;
+            border-radius: 5px;
             border: 1px solid #ccc;
-            box-sizing: border-box;
         }
-
         .button {
             background-color: #ff9800;
             color: white;
-            padding: 10px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            width: 100%;
         }
-
         .button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
-
         #burger {
             width: 40vw;
             height: 40vw;
             max-width: 300px;
             max-height: 300px;
-            background-image: url('whoppe.png');
+            background-image: url('https://username.github.io/repository-name/burger.png');
             background-size: cover;
             margin: 30px;
             cursor: pointer;
             border-radius: 50%;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
         }
-
         #stats {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 500px;
             margin-top: 20px;
             color: #333;
             font-weight: bold;
         }
-
         #energy-bar-container {
             width: 100%;
+            max-width: 500px;
             margin-top: 20px;
             text-align: center;
         }
-
         #energy-bar {
             width: 100%;
             background-color: #ddd;
@@ -92,38 +72,20 @@
             overflow: hidden;
             margin: 10px 0;
         }
-
         #energy {
             height: 20px;
             background-color: #76c7c0;
             width: 100%;
         }
-
         #energy-text {
             color: #333;
             font-weight: bold;
-        }
-
-        /* Адаптивность */
-        @media (max-width: 600px) {
-            #burger {
-                width: 70vw;
-                height: 70vw;
-            }
-
-            #stats, #energy-bar-container {
-                font-size: 14px;
-            }
-
-            input, .button {
-                font-size: 16px;
-            }
         }
     </style>
 </head>
 <body>
     <!-- Регистрация -->
-    <div id="auth-container" class="auth-container" data-form="register">
+    <div id="register">
         <h2>Регистрация</h2>
         <input type="text" id="regNickname" placeholder="Введите никнейм">
         <input type="password" id="regPassword" placeholder="Введите пароль">
@@ -133,7 +95,7 @@
     </div>
 
     <!-- Вход -->
-    <div id="auth-container" class="auth-container" data-form="login">
+    <div id="login">
         <h2>Вход</h2>
         <input type="text" id="loginNickname" placeholder="Введите никнейм">
         <input type="password" id="loginPassword" placeholder="Введите пароль">
@@ -143,7 +105,7 @@
     </div>
 
     <!-- Игра -->
-    <div id="game-container">
+    <div id="game">
         <div id="stats">
             <div id="score">Клики: 0</div>
             <div id="level">Уровень: 1</div>
@@ -181,23 +143,27 @@
         const db = getFirestore(app);
 
         // Переключение между формами
-        const authContainers = document.querySelectorAll('.auth-container');
-        const gameDiv = document.getElementById('game-container');
+        const registerDiv = document.getElementById('register');
+        const loginDiv = document.getElementById('login');
+        const gameDiv = document.getElementById('game');
 
-        const showAuthForm = (form) => {
-            authContainers.forEach(container => {
-                container.style.display = container.getAttribute('data-form') === form ? 'block' : 'none';
-            });
-            gameDiv.style.display = 'none';
-        };
+        const gotoLoginBtn = document.getElementById('gotoLoginBtn');
+        const gotoRegisterBtn = document.getElementById('gotoRegisterBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const loginBtn = document.getElementById('loginBtn');
 
-        const showGame = () => {
-            gameDiv.style.display = 'block';
-            authContainers.forEach(container => container.style.display = 'none');
-        };
+        gotoRegisterBtn.addEventListener('click', () => {
+            loginDiv.style.display = 'none';
+            registerDiv.style.display = 'block';
+        });
+
+        gotoLoginBtn.addEventListener('click', () => {
+            registerDiv.style.display = 'none';
+            loginDiv.style.display = 'block';
+        });
 
         // Регистрация
-        document.getElementById('registerBtn').addEventListener('click', async () => {
+        registerBtn.addEventListener('click', async () => {
             const nickname = document.getElementById('regNickname').value;
             const password = document.getElementById('regPassword').value;
             if (!nickname || !password) {
@@ -205,22 +171,25 @@
                 return;
             }
             try {
+                // Проверка на существование пользователя
                 const docRef = doc(db, 'users', nickname);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     document.getElementById('registerMessage').innerText = 'Никнейм уже занят';
                     return;
                 }
+                // Сохранение нового пользователя
                 await setDoc(docRef, { password: password, taps: 0, level: 1, energy: 3000, pointsPerClick: 1, upgradeCost: 50, tapsForNextLevel: 10 });
                 document.getElementById('registerMessage').innerText = 'Вы зарегистрированы!';
-                showAuthForm('login');
+                registerDiv.style.display = 'none';
+                loginDiv.style.display = 'block';
             } catch (error) {
                 document.getElementById('registerMessage').innerText = 'Ошибка регистрации: ' + error.message;
             }
         });
 
         // Вход
-        document.getElementById('loginBtn').addEventListener('click', async () => {
+        loginBtn.addEventListener('click', async () => {
             const nickname = document.getElementById('loginNickname').value;
             const password = document.getElementById('loginPassword').value;
             if (!nickname || !password) {
@@ -240,25 +209,23 @@
                     return;
                 }
                 document.getElementById('loginMessage').innerText = 'Вход выполнен успешно!';
-                showGame();
+                loginDiv.style.display = 'none';
+                gameDiv.style.display = 'block';
+                userId = nickname;
                 loadFromFirestore();
             } catch (error) {
                 document.getElementById('loginMessage').innerText = 'Ошибка входа: ' + error.message;
             }
         });
 
-        // Переключение форм
-        document.getElementById('gotoLoginBtn').addEventListener('click', () => showAuthForm('login'));
-        document.getElementById('gotoRegisterBtn').addEventListener('click', () => showAuthForm('register'));
-
         // Игра
+        let userId = '';
         let taps = 0;
         let level = 1;
         let energy = 3000;
         let pointsPerClick = 1;
         let upgradeCost = 50;
         let tapsForNextLevel = 10;
-        let userId = null;
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
@@ -343,7 +310,6 @@
                 updateStats();
             }
         });
-
     </script>
 </body>
 </html>
