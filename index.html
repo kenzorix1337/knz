@@ -78,6 +78,9 @@
             background-color: #76c7c0;
             width: 100%;
             border-radius: 20px;
+            position: absolute;
+            left: 0;
+            top: 0;
         }
         #energy-text {
             position: absolute;
@@ -315,7 +318,7 @@
         const startEnergyRecovery = () => {
             energyInterval = setInterval(() => {
                 if (energy < maxEnergy) {
-                    energy += 10;
+                    energy += 4;
                     if (energy > maxEnergy) {
                         energy = maxEnergy;
                     }
