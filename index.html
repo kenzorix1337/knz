@@ -249,7 +249,8 @@
                     maxEnergy: 3000,
                     pointsPerClick: 1,
                     upgradeCost: 50,
-                    tapsForNextLevel: 10
+                    tapsForNextLevel: 10,
+                    lastEnergyUpdate: new Date().toISOString() // Сохраняем текущее время
                 });
                 document.getElementById('registerMessage').innerText = 'Регистрация успешна!';
                 registerDiv.style.display = 'none';
@@ -293,6 +294,7 @@
         let pointsPerClick = 1;
         let upgradeCost = 50;
         let tapsForNextLevel = 10;
+        let lastEnergyUpdate = null;
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
@@ -333,7 +335,8 @@
                     maxEnergy: maxEnergy,
                     pointsPerClick: pointsPerClick,
                     upgradeCost: upgradeCost,
-                    tapsForNextLevel: tapsForNextLevel
+                    tapsForNextLevel: tapsForNextLevel,
+                    lastEnergyUpdate: new Date().toISOString() // Обновляем время последнего обновления энергии
                 }, { merge: true }); // Используем merge: true, чтобы обновлять только измененные поля
                 console.log('Data saved to Firestore');
             } catch (error) {
@@ -355,6 +358,8 @@
                     pointsPerClick = data.pointsPerClick || 1;
                     upgradeCost = data.upgradeCost || 50;
                     tapsForNextLevel = data.tapsForNextLevel || 10;
+                    lastEnergyUpdate = data.lastEnergyUpdate || new Date().toISOString();
+                    restoreEnergy(); // Восстановление энергии при загрузке
                     updateStats();
                 } else {
                     console.log('Document does not exist');
@@ -366,13 +371,20 @@
 
         // Восстановление энергии
         const restoreEnergy = () => {
-            if (energy < maxEnergy) {
-                energy = Math.min(energy + 3, maxEnergy);
+            if (!lastEnergyUpdate) return;
+            const now = new Date();
+            const lastUpdate = new Date(lastEnergyUpdate);
+            const elapsedTime = Math.floor((now - lastUpdate) / 1000); // Время в секундах
+
+            if (elapsedTime > 0) {
+                const restoreAmount = Math.floor(elapsedTime * 3); // Восстанавливаем 3 единицы энергии в секунду
+                energy = Math.min(energy + restoreAmount, maxEnergy);
+                lastEnergyUpdate = now.toISOString(); // Обновляем время последнего обновления
                 updateStats();
             }
         };
 
-        setInterval(restoreEnergy, 1000); // Восстанавливать энергию каждую секунду
+        setInterval(restoreEnergy, 1000); // Периодическая проверка на восстановление энергии
 
         burger.addEventListener('click', (event) => {
             if (energy > 0) {
@@ -412,13 +424,6 @@
                 updateStats();
             }
         });
-
-        // Периодическое восстановление энергии, даже когда игрок не в игре
-        const energyRestorationInterval = setInterval(() => {
-            if (document.getElementById('game').style.display === 'block') {
-                restoreEnergy();
-            }
-        }, 1000);
     </script>
 </body>
 </html>
