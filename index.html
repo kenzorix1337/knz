@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Игра</title>
+    <title>Тапалка</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -21,6 +21,7 @@
             -webkit-tap-highlight-color: transparent;
         }
         #game {
+            display: block;
             text-align: center;
             background: rgba(120, 120, 120, 0.9);
             padding: 20px;
@@ -29,14 +30,6 @@
         }
         h2 {
             margin-bottom: 20px;
-        }
-        input {
-            padding: 10px;
-            margin: 5px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            width: 80%;
-            max-width: 300px;
         }
         .button {
             background-color: #ff9800;
@@ -142,7 +135,9 @@
             <div id="score">Клики: 0</div>
             <div id="level">Уровень: 1</div>
         </div>
+
         <div id="burger"></div>
+
         <div id="energy-bar-container">
             <div id="energy-bar">
                 <div id="energy"></div>
@@ -150,29 +145,33 @@
                 <div id="max-energy-text">Макс: 3000</div>
             </div>
         </div>
+
         <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
     </div>
 
-    <!-- Подключение Firebase SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
+        // Ваши настройки Firebase
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
+            authDomain: "whopper-a32f7.firebaseapp.com",
+            projectId: "whopper-a32f7",
+            storageBucket: "whopper-a32f7.appspot.com",
+            messagingSenderId: "701387895307",
+            appId: "1:701387895307:web:cc656083f5f0ed1c590d0e",
+            measurementId: "G-PQ6JZEZMEP"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Замените userId на уникальный идентификатор пользователя Telegram
-        const userId = "specific_user_id";  // Конкретный ID пользователя, привязанный к Telegram
+        // Получаем id пользователя Telegram
+        const userId = Telegram.WebApp.initDataUnsafe.user.id;
 
+        // Игра
         let taps = 0;
         let level = 1;
         let energy = 3000;
@@ -180,6 +179,7 @@
         let pointsPerClick = 1;
         let upgradeCost = 50;
         let tapsForNextLevel = 10;
+        let lastEnergyUpdate = null;
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
@@ -198,12 +198,22 @@
             upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
             upgradeButton.disabled = taps < upgradeCost;
 
+            // Сохранение данных в Firestore
             saveToFirestore();
         };
 
+        const levelUp = () => {
+            if (taps >= level * tapsForNextLevel) {
+                level += 1;
+                tapsForNextLevel *= 1.5;
+                updateStats();
+            }
+        };
+
         const saveToFirestore = async () => {
+            if (!userId) return;
             try {
-                await setDoc(doc(db, 'users', userId), {
+                await setDoc(doc(db, 'users', userId.toString()), {
                     taps: taps,
                     level: level,
                     energy: energy,
@@ -211,15 +221,18 @@
                     pointsPerClick: pointsPerClick,
                     upgradeCost: upgradeCost,
                     tapsForNextLevel: tapsForNextLevel,
+                    lastEnergyUpdate: new Date().toISOString()
                 }, { merge: true });
+                console.log('Data saved to Firestore');
             } catch (error) {
-                console.error('Ошибка сохранения:', error);
+                console.error('Error saving data:', error);
             }
         };
 
         const loadFromFirestore = async () => {
+            if (!userId) return;
             try {
-                const docRef = doc(db, 'users', userId);
+                const docRef = doc(db, 'users', userId.toString());
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
@@ -230,10 +243,29 @@
                     pointsPerClick = data.pointsPerClick || 1;
                     upgradeCost = data.upgradeCost || 50;
                     tapsForNextLevel = data.tapsForNextLevel || 10;
+                    lastEnergyUpdate = data.lastEnergyUpdate || new Date().toISOString();
+                    restoreEnergy();
                     updateStats();
+                } else {
+                    console.log('Document does not exist');
                 }
             } catch (error) {
-                console.error('Ошибка загрузки данных:', error);
+                console.error('Error loading data:', error);
+            }
+        };
+
+        const restoreEnergy = () => {
+            const now = new Date();
+            if (lastEnergyUpdate) {
+                const timeDiff = now - new Date(lastEnergyUpdate);
+                const energyRestoration = Math.floor(timeDiff / (1000 * 60)); // энергия восстанавливается каждую минуту
+                if (energy < maxEnergy) {
+                    energy += energyRestoration;
+                    if (energy > maxEnergy) {
+                        energy = maxEnergy;
+                    }
+                }
+                lastEnergyUpdate = now.toISOString();
             }
         };
 
@@ -241,25 +273,31 @@
             if (energy > 0) {
                 taps += pointsPerClick;
                 energy -= 1;
-                if (taps >= level * tapsForNextLevel) {
-                    level++;
-                    tapsForNextLevel = Math.floor(tapsForNextLevel * 1.5);
-                }
+                levelUp();
                 updateStats();
+                showHitMarker();
             }
         });
 
         upgradeButton.addEventListener('click', () => {
             if (taps >= upgradeCost) {
                 taps -= upgradeCost;
-                pointsPerClick++;
-                upgradeCost *= 2;
-                maxEnergy += 500;
+                pointsPerClick += 1;
+                upgradeCost = Math.floor(upgradeCost * 1.5);
                 updateStats();
             }
         });
 
-        // Загружаем данные из Firestore при загрузке страницы
+        const showHitMarker = () => {
+            const hitMarker = document.createElement('div');
+            hitMarker.className = 'hitmarker';
+            hitMarker.innerText = `+${pointsPerClick}`;
+            hitMarker.style.left = `${Math.random() * 100}%`;
+            hitMarker.style.top = `${Math.random() * 100}%`;
+            document.body.appendChild(hitMarker);
+            setTimeout(() => hitMarker.remove(), 1000);
+        };
+
         loadFromFirestore();
     </script>
 </body>
