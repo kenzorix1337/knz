@@ -106,7 +106,13 @@
         import { getFirestore, doc, setDoc, getDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            // Ваши настройки Firebase
+            apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
+            authDomain: "whopper-a32f7.firebaseapp.com",
+            projectId: "whopper-a32f7",
+            storageBucket: "whopper-a32f7.appspot.com",
+            messagingSenderId: "701387895307",
+            appId: "1:701387895307:web:cc656083f5f0ed1c590d0e",
+            measurementId: "G-PQ6JZEZMEP"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -134,15 +140,65 @@
         });
 
         registerBtn.addEventListener('click', async () => {
-            // Логика регистрации
-        });
-
-        loginBtn.addEventListener('click', async () => {
-            // Логика входа
+            const nickname = document.getElementById('regNickname').value;
+            const password = document.getElementById('regPassword').value;
+            if (!nickname || !password) {
+                document.getElementById('registerMessage').innerText = 'Введите никнейм и пароль';
+                return;
+            }
+            try {
+                const docRef = doc(db, 'users', nickname);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    document.getElementById('registerMessage').innerText = 'Никнейм уже занят';
+                    return;
+                }
+                await setDoc(docRef, {
+                    password: password,
+                    taps: 0,
+                    level: 1,
+                    energy: 3000,
+                    maxEnergy: 3000,
+                    pointsPerClick: 1,
+                    upgradeCost: 50,
+                    tapsForNextLevel: 10,
+                    lastEnergyUpdate: new Date().toISOString()
+                });
+                document.getElementById('registerMessage').innerText = 'Регистрация успешна!';
+                registerDiv.style.display = 'none';
+                loginDiv.style.display = 'block';
+            } catch (error) {
+                document.getElementById('registerMessage').innerText = 'Ошибка регистрации';
+            }
         });
 
         let userId = '';
         let taps = 0;
+        let level = 1;
+
+        loginBtn.addEventListener('click', async () => {
+            const nickname = document.getElementById('loginNickname').value;
+            const password = document.getElementById('loginPassword').value;
+            if (!nickname || !password) {
+                document.getElementById('loginMessage').innerText = 'Введите никнейм и пароль';
+                return;
+            }
+            try {
+                const docRef = doc(db, 'users', nickname);
+                const docSnap = await getDoc(docRef);
+                if (!docSnap.exists() || docSnap.data().password !== password) {
+                    document.getElementById('loginMessage').innerText = 'Неверный никнейм или пароль';
+                    return;
+                }
+                document.getElementById('loginMessage').innerText = 'Вход успешен!';
+                loginDiv.style.display = 'none';
+                gameDiv.style.display = 'block';
+                userId = nickname;
+                loadTopPlayers();
+            } catch (error) {
+                document.getElementById('loginMessage').innerText = 'Ошибка входа';
+            }
+        });
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
@@ -184,8 +240,6 @@
             });
             topPlayersDiv.innerHTML = topPlayersHtml;
         };
-
-        loadTopPlayers();
 
         viewProfileBtn.addEventListener('click', async () => {
             const docRef = doc(db, 'users', userId);
