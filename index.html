@@ -3,22 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Игра с бургером</title>
+    <title>Игра</title>
     <style>
-        /* Весь ваш CSS остается без изменений */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #b3b3b3;
+            background-image: url('123.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #game {
+            text-align: center;
+            background: rgba(120, 120, 120, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+        input {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 80%;
+            max-width: 300px;
+        }
+        .button {
+            background-color: #ff9800;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px;
+            width: 80%;
+            max-width: 300px;
+            position: relative;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        .button:active {
+            background-color: #e68a00;
+            transform: scale(0.95);
+        }
+        #burger {
+            width: 50vw;
+            height: 50vw;
+            max-width: 400px;
+            max-height: 400px;
+            background-image: url('whoppe.png');
+            background-size: cover;
+            margin: 30px;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        #stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+            color: #333;
+            font-weight: bold;
+        }
+        #energy-bar-container {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+            text-align: center;
+            position: relative;
+        }
+        #energy-bar {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+            position: relative;
+            height: 40px;
+        }
+        #energy {
+            height: 100%;
+            background-color: #76c7c0;
+            width: 100%;
+            border-radius: 20px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            transition: width 0.5s;
+        }
+        #energy-text {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #333;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 1;
+        }
+        #max-energy-text {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #333;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 1;
+        }
+        .hitmarker {
+            position: absolute;
+            background-color: rgba(255, 0, 0, 0.7);
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 12px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
     </style>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Подключаем Telegram API -->
 </head>
 <body>
-    <!-- Игра -->
     <div id="game">
         <div id="stats">
             <div id="score">Клики: 0</div>
             <div id="level">Уровень: 1</div>
         </div>
-
         <div id="burger"></div>
-
         <div id="energy-bar-container">
             <div id="energy-bar">
                 <div id="energy"></div>
@@ -26,30 +150,29 @@
                 <div id="max-energy-text">Макс: 3000</div>
             </div>
         </div>
-
         <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
     </div>
 
+    <!-- Подключение Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // Firebase настройки
         const firebaseConfig = {
-            apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
-            authDomain: "whopper-a32f7.firebaseapp.com",
-            projectId: "whopper-a32f7",
-            storageBucket: "whopper-a32f7.appspot.com",
-            messagingSenderId: "701387895307",
-            appId: "1:701387895307:web:cc656083f5f0ed1c590d0e",
-            measurementId: "G-PQ6JZEZMEP"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Игра
-        let userId = '';
+        // Замените userId на уникальный идентификатор пользователя Telegram
+        const userId = "specific_user_id";  // Конкретный ID пользователя, привязанный к Telegram
+
         let taps = 0;
         let level = 1;
         let energy = 3000;
@@ -57,7 +180,6 @@
         let pointsPerClick = 1;
         let upgradeCost = 50;
         let tapsForNextLevel = 10;
-        let lastEnergyUpdate = null;
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
@@ -76,20 +198,10 @@
             upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
             upgradeButton.disabled = taps < upgradeCost;
 
-            // Сохранение данных в Firestore
             saveToFirestore();
         };
 
-        const levelUp = () => {
-            if (taps >= level * tapsForNextLevel) {
-                level += 1;
-                tapsForNextLevel *= 1.5;
-                updateStats();
-            }
-        };
-
         const saveToFirestore = async () => {
-            if (!userId) return;
             try {
                 await setDoc(doc(db, 'users', userId), {
                     taps: taps,
@@ -99,16 +211,13 @@
                     pointsPerClick: pointsPerClick,
                     upgradeCost: upgradeCost,
                     tapsForNextLevel: tapsForNextLevel,
-                    lastEnergyUpdate: new Date().toISOString() // Обновляем время последнего обновления энергии
                 }, { merge: true });
-                console.log('Data saved to Firestore');
             } catch (error) {
-                console.error('Error saving data:', error);
+                console.error('Ошибка сохранения:', error);
             }
         };
 
         const loadFromFirestore = async () => {
-            if (!userId) return;
             try {
                 const docRef = doc(db, 'users', userId);
                 const docSnap = await getDoc(docRef);
@@ -121,38 +230,21 @@
                     pointsPerClick = data.pointsPerClick || 1;
                     upgradeCost = data.upgradeCost || 50;
                     tapsForNextLevel = data.tapsForNextLevel || 10;
-                    lastEnergyUpdate = data.lastEnergyUpdate || new Date().toISOString();
-                    restoreEnergy();
                     updateStats();
-                } else {
-                    console.log('Document does not exist');
                 }
             } catch (error) {
-                console.error('Error loading data:', error);
+                console.error('Ошибка загрузки данных:', error);
             }
         };
 
-        const restoreEnergy = () => {
-            if (!lastEnergyUpdate) return;
-            const now = new Date();
-            const lastUpdate = new Date(lastEnergyUpdate);
-            const elapsedTime = Math.floor((now - lastUpdate) / 1000);
-
-            if (elapsedTime > 0) {
-                const restoreAmount = Math.floor(elapsedTime * 3);
-                energy = Math.min(energy + restoreAmount, maxEnergy);
-                lastEnergyUpdate = now.toISOString();
-                updateStats();
-            }
-        };
-
-        setInterval(restoreEnergy, 1000);
-
-        burger.addEventListener('click', (event) => {
+        burger.addEventListener('click', () => {
             if (energy > 0) {
                 taps += pointsPerClick;
                 energy -= 1;
-                levelUp();
+                if (taps >= level * tapsForNextLevel) {
+                    level++;
+                    tapsForNextLevel = Math.floor(tapsForNextLevel * 1.5);
+                }
                 updateStats();
             }
         });
@@ -160,18 +252,14 @@
         upgradeButton.addEventListener('click', () => {
             if (taps >= upgradeCost) {
                 taps -= upgradeCost;
-                pointsPerClick += 1;
+                pointsPerClick++;
                 upgradeCost *= 2;
                 maxEnergy += 500;
                 updateStats();
             }
         });
 
-        // Инициализация Telegram Web App и получение ID пользователя
-        window.Telegram.WebApp.ready();
-        userId = window.Telegram.WebApp.initDataUnsafe.user.id; // Привязываем к Telegram user ID
-
-        // Загружаем данные из Firestore при старте
+        // Загружаем данные из Firestore при загрузке страницы
         loadFromFirestore();
     </script>
 </body>
