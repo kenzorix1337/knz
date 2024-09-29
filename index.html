@@ -126,6 +126,7 @@
             font-size: 12px;
             transform: translate(-50%, -50%);
             pointer-events: none;
+            z-index: 1000; /* Ensure hitmarker is above other elements */
         }
     </style>
 </head>
@@ -206,6 +207,7 @@
             if (taps >= level * tapsForNextLevel) {
                 level += 1;
                 tapsForNextLevel *= 1.5;
+                maxEnergy += 500; // Увеличиваем максимальную энергию на 500
                 updateStats();
             }
         };
@@ -243,11 +245,12 @@
                     pointsPerClick = data.pointsPerClick || 1;
                     upgradeCost = data.upgradeCost || 50;
                     tapsForNextLevel = data.tapsForNextLevel || 10;
-                    lastEnergyUpdate = data.lastEnergyUpdate || new Date().toISOString();
-                    restoreEnergy();
-                    updateStats();
+                    lastEnergyUpdate = data.lastEnergyUpdate || null;
+
+                    restoreEnergy(); // Восстанавливаем энергию при загрузке
+                    updateStats(); // Обновляем статистику
                 } else {
-                    console.log('Document does not exist');
+                    console.log('No such document!');
                 }
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -264,18 +267,28 @@
                     if (energy > maxEnergy) {
                         energy = maxEnergy;
                     }
+                    lastEnergyUpdate = now.toISOString();
                 }
-                lastEnergyUpdate = now.toISOString();
+            } else {
+                lastEnergyUpdate = now.toISOString(); // инициализируем, если нет данных
             }
+            updateStats(); // Обновляем статистику после восстановления энергии
+        };
+
+        const updateEnergy = () => {
+            restoreEnergy(); // Восстанавливаем энергию
         };
 
         burger.addEventListener('click', () => {
             if (energy > 0) {
-                taps += pointsPerClick;
-                energy -= 1;
-                levelUp();
-                updateStats();
-                showHitMarker();
+                const energyCost = pointsPerClick * 0.5; // Расход энергии 50% от очков
+                if (energy >= energyCost) {
+                    taps += pointsPerClick;
+                    energy -= energyCost; // Уменьшаем энергию
+                    levelUp();
+                    showHitMarker();
+                    updateEnergy(); // Обновляем энергию
+                }
             }
         });
 
