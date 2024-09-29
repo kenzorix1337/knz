@@ -247,6 +247,8 @@
                     tapsForNextLevel = data.tapsForNextLevel || 10;
                     lastEnergyUpdate = data.lastEnergyUpdate || null;
 
+                    // Запускаем восстановление энергии
+                    setInterval(restoreEnergy, 60000); // Восстанавливаем энергию каждую минуту
                     restoreEnergy(); // Восстанавливаем энергию при загрузке
                     updateStats(); // Обновляем статистику
                 } else {
@@ -267,16 +269,12 @@
                     if (energy > maxEnergy) {
                         energy = maxEnergy;
                     }
-                    lastEnergyUpdate = now.toISOString();
+                    lastEnergyUpdate = now.toISOString(); // Обновляем последний момент восстановления энергии
                 }
             } else {
                 lastEnergyUpdate = now.toISOString(); // инициализируем, если нет данных
             }
             updateStats(); // Обновляем статистику после восстановления энергии
-        };
-
-        const updateEnergy = () => {
-            restoreEnergy(); // Восстанавливаем энергию
         };
 
         burger.addEventListener('click', () => {
@@ -287,7 +285,7 @@
                     energy -= energyCost; // Уменьшаем энергию
                     levelUp();
                     showHitMarker(pointsPerClick); // Отображаем хитмаркер с количеством кликов
-                    updateEnergy(); // Обновляем энергию
+                    updateStats(); // Обновляем статистику
                 }
             }
         });
