@@ -3,47 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация и Вход</title>
+    <title>Игра с Кликами</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #ffcccc, #ffe6cc);
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #ffcccb, #ffe5b4);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
+            color: #333;
         }
-        #register, #login, #game, #profile {
-            display: none;
+        #game {
             text-align: center;
             background: rgba(255, 255, 255, 0.9);
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
-        #register { display: block; }
-        h2 { margin-bottom: 20px; }
-        input {
-            padding: 10px;
-            margin: 5px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            width: 80%;
-            max-width: 300px;
+        #score {
+            font-size: 24px;
+            margin-bottom: 10px;
         }
-        .button {
+        #burger {
+            width: 100px;
+            height: 100px;
             background-color: #ff9800;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
+            border-radius: 50%;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            margin: 10px;
-            transition: background-color 0.3s, transform 0.1s;
+            transition: transform 0.1s;
         }
-        .button:hover { background-color: #e68a00; }
+        #burger:hover {
+            transform: scale(1.1);
+        }
         .hitmarker {
             position: absolute;
             background-color: rgba(255, 0, 0, 0.7);
@@ -57,53 +56,39 @@
             0% { opacity: 1; }
             100% { opacity: 0; }
         }
+        .button {
+            background-color: #ff5722;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            margin-top: 10px;
+        }
+        .button:hover { background-color: #e64a19; }
         #top-players {
             margin-top: 20px;
             text-align: left;
             background: rgba(255, 255, 255, 0.8);
             padding: 10px;
             border-radius: 10px;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div id="register">
-        <h2>Регистрация</h2>
-        <input type="text" id="regNickname" placeholder="Никнейм">
-        <input type="password" id="regPassword" placeholder="Пароль">
-        <button id="registerBtn" class="button">Зарегистрироваться</button>
-        <p id="registerMessage"></p>
-        <button id="gotoLoginBtn" class="button">Уже есть аккаунт? Войти</button>
-    </div>
-
-    <div id="login">
-        <h2>Вход</h2>
-        <input type="text" id="loginNickname" placeholder="Никнейм">
-        <input type="password" id="loginPassword" placeholder="Пароль">
-        <button id="loginBtn" class="button">Войти</button>
-        <p id="loginMessage"></p>
-        <button id="gotoRegisterBtn" class="button">Нет аккаунта? Зарегистрироваться</button>
-    </div>
-
     <div id="game">
-        <div id="stats">
-            <div id="score">Клики: 0</div>
-            <div id="level">Уровень: 1</div>
-        </div>
-        <div id="burger"></div>
+        <div id="score">Клики: 0</div>
+        <div id="burger">🍔</div>
         <button class="button" id="viewProfile">Профиль</button>
+        <button class="button" id="topButton">Топ Игроков</button>
         <div id="top-players"></div>
-    </div>
-
-    <div id="profile">
-        <h2>Профиль</h2>
-        <div id="profileStats"></div>
-        <button class="button" id="backToGame">Назад в игру</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, query, orderBy, limit, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
@@ -118,93 +103,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const registerDiv = document.getElementById('register');
-        const loginDiv = document.getElementById('login');
-        const gameDiv = document.getElementById('game');
-        const profileDiv = document.getElementById('profile');
-        const gotoLoginBtn = document.getElementById('gotoLoginBtn');
-        const gotoRegisterBtn = document.getElementById('gotoRegisterBtn');
-        const registerBtn = document.getElementById('registerBtn');
-        const loginBtn = document.getElementById('loginBtn');
-        const viewProfileBtn = document.getElementById('viewProfile');
-        const backToGameBtn = document.getElementById('backToGame');
-
-        gotoRegisterBtn.addEventListener('click', () => {
-            loginDiv.style.display = 'none';
-            registerDiv.style.display = 'block';
-        });
-
-        gotoLoginBtn.addEventListener('click', () => {
-            registerDiv.style.display = 'none';
-            loginDiv.style.display = 'block';
-        });
-
-        registerBtn.addEventListener('click', async () => {
-            const nickname = document.getElementById('regNickname').value;
-            const password = document.getElementById('regPassword').value;
-            if (!nickname || !password) {
-                document.getElementById('registerMessage').innerText = 'Введите никнейм и пароль';
-                return;
-            }
-            try {
-                const docRef = doc(db, 'users', nickname);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    document.getElementById('registerMessage').innerText = 'Никнейм уже занят';
-                    return;
-                }
-                await setDoc(docRef, {
-                    password: password,
-                    taps: 0,
-                    level: 1,
-                    energy: 3000,
-                    maxEnergy: 3000,
-                    pointsPerClick: 1,
-                    upgradeCost: 50,
-                    tapsForNextLevel: 10,
-                    lastEnergyUpdate: new Date().toISOString()
-                });
-                document.getElementById('registerMessage').innerText = 'Регистрация успешна!';
-                registerDiv.style.display = 'none';
-                loginDiv.style.display = 'block';
-            } catch (error) {
-                document.getElementById('registerMessage').innerText = 'Ошибка регистрации';
-            }
-        });
-
         let userId = '';
         let taps = 0;
-        let level = 1;
-
-        loginBtn.addEventListener('click', async () => {
-            const nickname = document.getElementById('loginNickname').value;
-            const password = document.getElementById('loginPassword').value;
-            if (!nickname || !password) {
-                document.getElementById('loginMessage').innerText = 'Введите никнейм и пароль';
-                return;
-            }
-            try {
-                const docRef = doc(db, 'users', nickname);
-                const docSnap = await getDoc(docRef);
-                if (!docSnap.exists() || docSnap.data().password !== password) {
-                    document.getElementById('loginMessage').innerText = 'Неверный никнейм или пароль';
-                    return;
-                }
-                document.getElementById('loginMessage').innerText = 'Вход успешен!';
-                loginDiv.style.display = 'none';
-                gameDiv.style.display = 'block';
-                userId = nickname;
-                loadTopPlayers();
-            } catch (error) {
-                document.getElementById('loginMessage').innerText = 'Ошибка входа';
-            }
-        });
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
         const topPlayersDiv = document.getElementById('top-players');
+        const topButton = document.getElementById('topButton');
 
-        burger.addEventListener('click', (event) => {
+        burger.addEventListener('click', async (event) => {
             taps++;
             updateScore();
             showHitmarker(event, 1);
@@ -231,30 +138,16 @@
             await setDoc(doc(db, 'users', userId), { taps }, { merge: true });
         };
 
-        const loadTopPlayers = async () => {
-            const q = query(collection(db, 'users'), orderBy('taps', 'desc'), limit(10));
+        topButton.addEventListener('click', async () => {
+            const q = query(collection(db, 'users'), orderBy('taps', 'desc'), limit(100));
             const querySnapshot = await getDocs(q);
-            let topPlayersHtml = '<h3>Топ игроков:</h3>';
+            let topPlayersHtml = '<h3>Топ 100 игроков:</h3>';
+            let rank = 1;
             querySnapshot.forEach(doc => {
-                topPlayersHtml += `<div>${doc.id}: ${doc.data().taps} кликов</div>`;
+                topPlayersHtml += `<div>${rank++}. ${doc.id}: ${doc.data().taps} кликов</div>`;
             });
             topPlayersDiv.innerHTML = topPlayersHtml;
-        };
-
-        viewProfileBtn.addEventListener('click', async () => {
-            const docRef = doc(db, 'users', userId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                profileStats.innerText = `Ник: ${userId}\nКлики: ${data.taps}\nУровень: ${data.level}`;
-            }
-            gameDiv.style.display = 'none';
-            profileDiv.style.display = 'block';
-        });
-
-        backToGameBtn.addEventListener('click', () => {
-            profileDiv.style.display = 'none';
-            gameDiv.style.display = 'block';
+            topPlayersDiv.style.display = 'block';
         });
     </script>
 </body>
