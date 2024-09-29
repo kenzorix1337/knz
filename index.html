@@ -130,25 +130,19 @@
             pointer-events: none;
             z-index: 1000; /* Ensure hitmarker is above other elements */
         }
-        .tabs {
+        .tab-container {
             display: flex;
             justify-content: space-around;
             width: 100%;
             max-width: 400px;
             margin-top: 20px;
         }
-        .tab-button {
-            background-color: #ff9800;
-            color: white;
+        .tab-icon {
+            background-color: transparent;
             border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
             cursor: pointer;
-            flex: 1;
-            transition: background-color 0.3s;
-        }
-        .tab-button.active {
-            background-color: #e68a00;
+            font-size: 24px;
+            padding: 10px;
         }
         .upgrade-section {
             display: none;
@@ -176,11 +170,6 @@
             </div>
         </div>
 
-        <div class="tabs">
-            <button class="tab-button active" id="main-tab">Главный экран</button>
-            <button class="tab-button" id="upgrade-tab">Прокачка</button>
-        </div>
-
         <div id="main-screen" class="upgrade-section active">
             <button class="button" id="tap-button">Тапнуть!</button>
         </div>
@@ -189,6 +178,11 @@
             <h2>Прокачка</h2>
             <button class="button" id="upgrade-energy">Увеличить макс. энергию (Стоимость: 50)</button>
             <button class="button" id="upgrade-clicks">Увеличить клики за тап (Стоимость: 50)</button>
+        </div>
+
+        <div class="tab-container">
+            <button class="tab-icon" id="home-tab">🏠</button>
+            <button class="tab-icon" id="upgrade-tab">🚀</button>
         </div>
     </div>
 
@@ -225,7 +219,6 @@
         let tapsForNextLevel = 10;
         let lastEnergyUpdate = Date.now(); // Устанавливаем начальное время
 
-        const burger = document.getElementById('burger');
         const score = document.getElementById('score');
         const levelDisplay = document.getElementById('level');
         const energyBar = document.getElementById('energy');
@@ -234,7 +227,7 @@
         const tapButton = document.getElementById('tap-button');
         const upgradeEnergyButton = document.getElementById('upgrade-energy');
         const upgradeClicksButton = document.getElementById('upgrade-clicks');
-        const mainTab = document.getElementById('main-tab');
+        const homeTab = document.getElementById('home-tab');
         const upgradeTab = document.getElementById('upgrade-tab');
         const mainScreen = document.getElementById('main-screen');
         const upgradeScreen = document.getElementById('upgrade-screen');
@@ -258,25 +251,16 @@
         };
 
         const restoreEnergy = () => {
-            const now = Date.now();
-            const timeDiff = Math.floor((now - lastEnergyUpdate) / 60000); // Разница в минутах
-            if (timeDiff > 0) {
-                energy += timeDiff; // Восстанавливаем 1 энергию за каждую минуту
+            if (energy < maxEnergy) {
+                energy += 1; // Восстанавливаем 1 энергию каждую секунду
                 if (energy > maxEnergy) {
-                    energy = maxEnergy;
+                    energy = maxEnergy; // Не превышаем максимальную энергию
                 }
-                lastEnergyUpdate = now; // Обновляем время последнего восстановления энергии
                 updateStats(); // Обновляем статистику после восстановления энергии
             }
         };
 
-        burger.addEventListener('click', () => {
-            restoreEnergy(); // Проверяем восстановление энергии при клике
-        });
-
         tapButton.addEventListener('click', () => {
-            restoreEnergy(); // Проверяем восстановление энергии при тапе
-
             if (energy > 0) {
                 const energyCost = pointsPerClick; // Расход энергии равен количеству полученных кликов
                 if (energy >= energyCost) {
@@ -336,32 +320,26 @@
 
                     updateStats(); // Обновляем статистику
                 } else {
-                    console.log('No such document!');
+                    console.log('Нет такого документа!');
                 }
             } catch (error) {
-                console.error('Error loading data:', error);
+                console.error('Ошибка при загрузке данных:', error);
             }
         };
 
         // Переключение между вкладками
-        mainTab.addEventListener('click', () => {
-            mainTab.classList.add('active');
-            upgradeTab.classList.remove('active');
+        homeTab.addEventListener('click', () => {
             mainScreen.classList.add('active');
             upgradeScreen.classList.remove('active');
-            restoreEnergy(); // Восстанавливаем энергию, когда игрок на главном экране
         });
 
         upgradeTab.addEventListener('click', () => {
-            upgradeTab.classList.add('active');
-            mainTab.classList.remove('active');
             upgradeScreen.classList.add('active');
             mainScreen.classList.remove('active');
-            restoreEnergy(); // Восстанавливаем энергию, когда игрок на экране улучшений
         });
 
         loadFromFirestore();
-        setInterval(restoreEnergy, 60000); // Восстановление энергии каждую минуту
+        setInterval(restoreEnergy, 1000); // Восстановление энергии каждую секунду
     </script>
 </body>
 </html>
