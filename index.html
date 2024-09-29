@@ -180,7 +180,7 @@
         let pointsPerClick = 1;
         let upgradeCost = 50;
         let tapsForNextLevel = 10;
-        let lastEnergyUpdate = null;
+        let lastEnergyUpdate = Date.now(); // Устанавливаем начальное время
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
@@ -223,7 +223,7 @@
                     pointsPerClick: pointsPerClick,
                     upgradeCost: upgradeCost,
                     tapsForNextLevel: tapsForNextLevel,
-                    lastEnergyUpdate: new Date().toISOString()
+                    lastEnergyUpdate: lastEnergyUpdate // Сохраняем время последнего обновления энергии
                 }, { merge: true });
                 console.log('Data saved to Firestore');
             } catch (error) {
@@ -245,11 +245,8 @@
                     pointsPerClick = data.pointsPerClick || 1;
                     upgradeCost = data.upgradeCost || 50;
                     tapsForNextLevel = data.tapsForNextLevel || 10;
-                    lastEnergyUpdate = data.lastEnergyUpdate || null;
+                    lastEnergyUpdate = data.lastEnergyUpdate || Date.now(); // Если нет данных, берем текущее время
 
-                    // Запускаем восстановление энергии
-                    setInterval(restoreEnergy, 60000); // Восстанавливаем энергию каждую минуту
-                    restoreEnergy(); // Восстанавливаем энергию при загрузке
                     updateStats(); // Обновляем статистику
                 } else {
                     console.log('No such document!');
@@ -260,24 +257,21 @@
         };
 
         const restoreEnergy = () => {
-            const now = new Date();
-            if (lastEnergyUpdate) {
-                const timeDiff = now - new Date(lastEnergyUpdate);
-                const energyRestoration = Math.floor(timeDiff / (1000 * 60)); // энергия восстанавливается каждую минуту
-                if (energy < maxEnergy) {
-                    energy += energyRestoration;
-                    if (energy > maxEnergy) {
-                        energy = maxEnergy;
-                    }
-                    lastEnergyUpdate = now.toISOString(); // Обновляем последний момент восстановления энергии
+            const now = Date.now();
+            const timeDiff = Math.floor((now - lastEnergyUpdate) / 60000); // Разница в минутах
+            if (timeDiff > 0) {
+                energy += timeDiff; // Восстанавливаем 1 энергию за каждую минуту
+                if (energy > maxEnergy) {
+                    energy = maxEnergy;
                 }
-            } else {
-                lastEnergyUpdate = now.toISOString(); // инициализируем, если нет данных
+                lastEnergyUpdate = now; // Обновляем время последнего восстановления энергии
+                updateStats(); // Обновляем статистику после восстановления энергии
             }
-            updateStats(); // Обновляем статистику после восстановления энергии
         };
 
         burger.addEventListener('click', () => {
+            restoreEnergy(); // Проверяем восстановление энергии при клике
+
             if (energy > 0) {
                 const energyCost = pointsPerClick; // Расход энергии равен количеству полученных кликов
                 if (energy >= energyCost) {
