@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация и Вход</title>
+    <title>Игра с Топом Игроков</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
             background-color: #b3b3b3;
-            background-image: url('123.png'); /* Замените на путь к вашему PNG изображению */
+            background-image: url('whoppe.png'); /* Замените на путь к вашему PNG изображению */
             background-size: cover;
             background-position: center;
             display: flex;
@@ -19,8 +19,11 @@
             margin: 0;
             overflow: hidden;
             -webkit-tap-highlight-color: transparent; /* Убираем синий эффект на мобильных устройствах */
+            transition: background-color 0.3s ease-in-out; /* Плавная смена фона */
         }
-        #register, #login, #game {
+
+        /* Основные секции */
+        #register, #login, #game, #leaderboard {
             display: none;
             text-align: center;
             background: rgba(120, 120, 120, 0.9);
@@ -28,12 +31,18 @@
             border-radius: 10px;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
         }
-        #register {
-            display: block; /* Отображаем форму регистрации по умолчанию */
+
+        #game {
+            display: block; /* Показываем игру по умолчанию */
+            flex-direction: column;
+            align-items: center;
         }
+
         h2 {
             margin-bottom: 20px;
         }
+
+        /* Поля ввода */
         input {
             padding: 10px;
             margin: 5px;
@@ -42,6 +51,8 @@
             width: 80%;
             max-width: 300px;
         }
+
+        /* Кнопки */
         .button {
             background-color: #ff9800;
             color: white;
@@ -53,17 +64,21 @@
             margin: 10px;
             width: 80%;
             max-width: 300px;
-            position: relative; /* Для абсолютного позиционирования элементов внутри */
-            transition: background-color 0.3s, transform 0.1s; /* Добавляем плавность изменения фона и масштаба */
+            position: relative;
+            transition: background-color 0.3s, transform 0.1s; /* Добавляем плавность */
         }
+
         .button:active {
             background-color: #e68a00;
             transform: scale(0.95); /* Уменьшаем кнопку при нажатии */
         }
+
         .button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
+
+        /* Бургер - улучшенная анимация */
         #burger {
             width: 50vw;
             height: 50vw;
@@ -76,62 +91,71 @@
             border-radius: 50%;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
             position: relative;
+            transition: transform 0.2s ease-in-out;
         }
-        #stats {
+
+        #burger:active {
+            transform: scale(0.9); /* Уменьшаем бургер при нажатии */
+        }
+
+        /* Навигационная панель снизу */
+        #navbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(50, 50, 50, 0.9);
             display: flex;
             justify-content: space-around;
-            width: 100%;
+            padding: 10px 0;
+            box-shadow: 0px -4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-button {
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .nav-button:active {
+            transform: scale(0.9);
+        }
+
+        /* Секция для топа игроков */
+        #leaderboard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            margin: 5px;
+            border-radius: 10px;
+            width: 80%;
             max-width: 600px;
-            margin-top: 20px;
-            color: #333;
-            font-weight: bold;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         }
-        #energy-bar-container {
-            width: 100%;
-            max-width: 600px;
-            margin-top: 20px;
-            text-align: center;
-            position: relative;
-        }
-        #energy-bar {
-            width: 100%;
-            background-color: #ddd;
-            border-radius: 20px;
-            overflow: hidden;
-            margin: 10px 0;
-            position: relative;
-            height: 40px; /* Высота полосы */
-        }
-        #energy {
-            height: 100%; /* Высота полосы */
+
+        .avatar {
+            width: 50px;
+            height: 50px;
             background-color: #76c7c0;
-            width: 100%;
-            border-radius: 20px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            transition: width 0.5s; /* Плавное изменение ширины */
-        }
-        #energy-text {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #333;
-            font-size: 14px; /* Уменьшаем размер шрифта */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
             font-weight: bold;
-            z-index: 1; /* Показать текст поверх полосы */
+            margin-right: 10px;
         }
-        #max-energy-text {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #333;
-            font-size: 14px; /* Уменьшаем размер шрифта */
-            font-weight: bold;
-            z-index: 1; /* Показать текст поверх полосы */
-        }
+
+        /* Анимация хитмаркера */
         .hitmarker {
             position: absolute;
             background-color: rgba(255, 0, 0, 0.7);
@@ -141,39 +165,25 @@
             font-size: 12px;
             transform: translate(-50%, -50%);
             pointer-events: none; /* Чтобы не мешал другим элементам */
+            animation: fadeout 1s forwards; /* Анимация исчезновения */
+        }
+
+        @keyframes fadeout {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Регистрация -->
-    <div id="register">
-        <h2>Регистрация</h2>
-        <input type="text" id="regNickname" placeholder="Введите никнейм">
-        <input type="password" id="regPassword" placeholder="Введите пароль">
-        <button id="registerBtn" class="button">Зарегистрироваться</button>
-        <p id="registerMessage"></p>
-        <button id="gotoLoginBtn" class="button">Уже есть аккаунт? Войти</button>
-    </div>
-
-    <!-- Вход -->
-    <div id="login">
-        <h2>Вход</h2>
-        <input type="text" id="loginNickname" placeholder="Введите никнейм">
-        <input type="password" id="loginPassword" placeholder="Введите пароль">
-        <button id="loginBtn" class="button">Войти</button>
-        <p id="loginMessage"></p>
-        <button id="gotoRegisterBtn" class="button">Нет аккаунта? Зарегистрироваться</button>
-    </div>
-
     <!-- Игра -->
     <div id="game">
-        <div id="stats">
-            <div id="score">Клики: 0</div>
-            <div id="level">Уровень: 1</div>
-        </div>
-
+        <h2>Тапай на бургер!</h2>
         <div id="burger"></div>
-
+        <div id="score">Клики: 0</div>
         <div id="energy-bar-container">
             <div id="energy-bar">
                 <div id="energy"></div>
@@ -181,16 +191,26 @@
                 <div id="max-energy-text">Макс: 3000</div>
             </div>
         </div>
-
-        <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
     </div>
 
-    <!-- Подключение Firebase SDK -->
+    <!-- Топ игроков -->
+    <div id="leaderboard">
+        <h2>Топ игроков</h2>
+        <div id="playerRank">Ваше место: 101</div>
+        <div id="topPlayers"></div>
+    </div>
+
+    <!-- Панель навигации -->
+    <div id="navbar">
+        <div id="homeButton" class="nav-button">🏠</div>
+        <div id="leaderboardButton" class="nav-button">🏆</div>
+    </div>
+
+    <!-- Firebase SDK и скрипты -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // Ваши настройки Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
             authDomain: "whopper-a32f7.firebaseapp.com",
@@ -204,226 +224,75 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Переключение между формами
-        const registerDiv = document.getElementById('register');
-        const loginDiv = document.getElementById('login');
-        const gameDiv = document.getElementById('game');
-
-        const gotoLoginBtn = document.getElementById('gotoLoginBtn');
-        const gotoRegisterBtn = document.getElementById('gotoRegisterBtn');
-        const registerBtn = document.getElementById('registerBtn');
-        const loginBtn = document.getElementById('loginBtn');
-
-        gotoRegisterBtn.addEventListener('click', () => {
-            loginDiv.style.display = 'none';
-            registerDiv.style.display = 'block';
-        });
-
-        gotoLoginBtn.addEventListener('click', () => {
-            registerDiv.style.display = 'none';
-            loginDiv.style.display = 'block';
-        });
-
-        // Регистрация
-        registerBtn.addEventListener('click', async () => {
-            const nickname = document.getElementById('regNickname').value;
-            const password = document.getElementById('regPassword').value;
-            if (!nickname || !password) {
-                document.getElementById('registerMessage').innerText = 'Введите никнейм и пароль';
-                return;
-            }
-            try {
-                // Проверка на существование пользователя
-                const docRef = doc(db, 'users', nickname);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    document.getElementById('registerMessage').innerText = 'Никнейм уже занят';
-                    return;
-                }
-                // Сохранение нового пользователя
-                await setDoc(docRef, {
-                    password: password,
-                    taps: 0,
-                    level: 1,
-                    energy: 3000,
-                    maxEnergy: 3000,
-                    pointsPerClick: 1,
-                    upgradeCost: 50,
-                    tapsForNextLevel: 10,
-                    lastEnergyUpdate: new Date().toISOString() // Сохраняем текущее время
-                });
-                document.getElementById('registerMessage').innerText = 'Регистрация успешна!';
-                registerDiv.style.display = 'none';
-                loginDiv.style.display = 'block';
-            } catch (error) {
-                document.getElementById('registerMessage').innerText = 'Ошибка регистрации';
-            }
-        });
-
-        // Вход
-        loginBtn.addEventListener('click', async () => {
-            const nickname = document.getElementById('loginNickname').value;
-            const password = document.getElementById('loginPassword').value;
-            if (!nickname || !password) {
-                document.getElementById('loginMessage').innerText = 'Введите никнейм и пароль';
-                return;
-            }
-            try {
-                const docRef = doc(db, 'users', nickname);
-                const docSnap = await getDoc(docRef);
-                if (!docSnap.exists() || docSnap.data().password !== password) {
-                    document.getElementById('loginMessage').innerText = 'Неверный никнейм или пароль';
-                    return;
-                }
-                document.getElementById('loginMessage').innerText = 'Вход успешен!';
-                loginDiv.style.display = 'none';
-                gameDiv.style.display = 'block';
-                userId = nickname;
-                loadFromFirestore();
-            } catch (error) {
-                document.getElementById('loginMessage').innerText = 'Ошибка входа';
-            }
-        });
-
-        // Игра
         let userId = '';
         let taps = 0;
-        let level = 1;
-        let energy = 3000;
         let maxEnergy = 3000;
-        let pointsPerClick = 1;
-        let upgradeCost = 50;
-        let tapsForNextLevel = 10;
-        let lastEnergyUpdate = null;
+        let energy = maxEnergy;
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
-        const levelDisplay = document.getElementById('level');
-        const energyBar = document.getElementById('energy');
         const energyText = document.getElementById('energy-text');
-        const maxEnergyText = document.getElementById('max-energy-text');
-        const upgradeButton = document.getElementById('upgrade');
+        const energyBar = document.getElementById('energy');
+        const homeButton = document.getElementById('homeButton');
+        const leaderboardButton = document.getElementById('leaderboardButton');
+        const gameDiv = document.getElementById('game');
+        const leaderboardDiv = document.getElementById('leaderboard');
+        const playerRank = document.getElementById('playerRank');
+        const topPlayersDiv = document.getElementById('topPlayers');
 
-        const updateStats = () => {
-            score.innerText = `Клики: ${taps}`;
-            levelDisplay.innerText = `Уровень: ${level}`;
-            energyBar.style.width = `${(energy / maxEnergy) * 100}%`;
-            energyText.innerText = `Энергия: ${energy}`;
-            maxEnergyText.innerText = `Макс: ${maxEnergy}`;
-            upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
-            upgradeButton.disabled = taps < upgradeCost;
+        // Смена экранов
+        homeButton.addEventListener('click', () => {
+            gameDiv.style.display = 'block';
+            leaderboardDiv.style.display = 'none';
+        });
 
-            // Сохранение данных в Firestore
-            saveToFirestore();
-        };
+        leaderboardButton.addEventListener('click', () => {
+            gameDiv.style.display = 'none';
+            leaderboardDiv.style.display = 'block';
+            loadLeaderboard(); // Загрузка топа игроков
+        });
 
-        const levelUp = () => {
-            if (taps >= level * tapsForNextLevel) {
-                level += 1;
-                tapsForNextLevel *= 1.5;
-                updateStats();
-            }
-        };
-
-        const saveToFirestore = async () => {
-            if (!userId) return;
-            try {
-                await setDoc(doc(db, 'users', userId), {
-                    taps: taps,
-                    level: level,
-                    energy: energy,
-                    maxEnergy: maxEnergy,
-                    pointsPerClick: pointsPerClick,
-                    upgradeCost: upgradeCost,
-                    tapsForNextLevel: tapsForNextLevel,
-                    lastEnergyUpdate: new Date().toISOString() // Обновляем время последнего обновления энергии
-                }, { merge: true }); // Используем merge: true, чтобы обновлять только измененные поля
-                console.log('Data saved to Firestore');
-            } catch (error) {
-                console.error('Error saving data:', error);
-            }
-        };
-
-        const loadFromFirestore = async () => {
-            if (!userId) return;
-            try {
-                const docRef = doc(db, 'users', userId);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    taps = data.taps || 0;
-                    level = data.level || 1;
-                    energy = data.energy || 3000;
-                    maxEnergy = data.maxEnergy || 3000;
-                    pointsPerClick = data.pointsPerClick || 1;
-                    upgradeCost = data.upgradeCost || 50;
-                    tapsForNextLevel = data.tapsForNextLevel || 10;
-                    lastEnergyUpdate = data.lastEnergyUpdate || new Date().toISOString();
-                    restoreEnergy(); // Восстановление энергии при загрузке
-                    updateStats();
-                } else {
-                    console.log('Document does not exist');
-                }
-            } catch (error) {
-                console.error('Error loading data:', error);
-            }
-        };
-
-        // Восстановление энергии
-        const restoreEnergy = () => {
-            if (!lastEnergyUpdate) return;
-            const now = new Date();
-            const lastUpdate = new Date(lastEnergyUpdate);
-            const elapsedTime = Math.floor((now - lastUpdate) / 1000); // Время в секундах
-
-            if (elapsedTime > 0) {
-                const restoreAmount = Math.floor(elapsedTime * 3); // Восстанавливаем 3 единицы энергии в секунду
-                energy = Math.min(energy + restoreAmount, maxEnergy);
-                lastEnergyUpdate = now.toISOString(); // Обновляем время последнего обновления
-                updateStats();
-            }
-        };
-
-        setInterval(restoreEnergy, 1000); // Периодическая проверка на восстановление энергии
-
+        // Хитмаркер при клике
         burger.addEventListener('click', (event) => {
             if (energy > 0) {
-                taps += pointsPerClick;
-                energy -= 1;
-                levelUp();
-                updateStats();
-                
-                // Создание и отображение хитмаркера
+                taps++;
+                energy--;
+
+                // Обновление интерфейса
+                score.innerText = `Клики: ${taps}`;
+                energyText.innerText = `Энергия: ${energy}`;
+                energyBar.style.width = `${(energy / maxEnergy) * 100}%`;
+
+                // Позиция хитмаркера
                 const hitmarker = document.createElement('div');
                 hitmarker.className = 'hitmarker';
-                hitmarker.innerText = `+${pointsPerClick}`;
-                
-                // Определение позиции клика
+                hitmarker.innerText = '+1';
                 const rect = burger.getBoundingClientRect();
                 const x = event.clientX - rect.left;
                 const y = event.clientY - rect.top;
-                
                 hitmarker.style.left = `${x}px`;
                 hitmarker.style.top = `${y}px`;
-                
                 burger.appendChild(hitmarker);
-
-                // Удаление хитмаркера через 1 секунду
-                setTimeout(() => {
-                    hitmarker.remove();
-                }, 1000);
+                setTimeout(() => hitmarker.remove(), 1000);
             }
         });
 
-        upgradeButton.addEventListener('click', () => {
-            if (taps >= upgradeCost) {
-                taps -= upgradeCost;
-                pointsPerClick += 1;
-                upgradeCost *= 2;
-                maxEnergy += 500; // Увеличение максимальной энергии при улучшении
-                updateStats();
-            }
-        });
+        // Загрузка топа игроков
+        const loadLeaderboard = async () => {
+            const topPlayersQuery = query(collection(db, 'users'), orderBy('taps', 'desc'), limit(100));
+            const querySnapshot = await getDocs(topPlayersQuery);
+            topPlayersDiv.innerHTML = ''; // Очистить прошлый список
+            querySnapshot.forEach((doc, index) => {
+                const player = doc.data();
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'leaderboard-item';
+                playerDiv.innerHTML = `
+                    <div class="avatar">${player.nickname.charAt(0).toUpperCase()}</div>
+                    <div>${index + 1}. ${player.nickname} - ${player.taps} кликов</div>
+                `;
+                topPlayersDiv.appendChild(playerDiv);
+            });
+        };
     </script>
 </body>
 </html>
