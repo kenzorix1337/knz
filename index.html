@@ -33,29 +33,10 @@
         h2 {
             margin-bottom: 20px;
         }
-        .button {
-            background-color: #ff9800;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            margin: 10px;
-            width: 80%;
-            max-width: 300px;
-            position: relative;
-            transition: background-color 0.3s, transform 0.1s;
-        }
-        .button:active {
-            background-color: #e68a00;
-            transform: scale(0.95);
-        }
         #burger {
             width: 50vw;
             height: 50vw;
             max-width: 400px;
-            max-height: 400px;
             background-image: url('whoppe.png');
             background-size: cover;
             margin: 30px;
@@ -171,7 +152,7 @@
         </div>
 
         <div id="main-screen" class="upgrade-section active">
-            <button class="button" id="tap-button">Тапнуть!</button>
+            <div id="burger" onclick="tapCircle()"></div>
         </div>
 
         <div id="upgrade-screen" class="upgrade-section">
@@ -217,14 +198,12 @@
         let upgradeEnergyCost = 50;
         let upgradeClicksCost = 50;
         let tapsForNextLevel = 10;
-        let lastEnergyUpdate = Date.now(); // Устанавливаем начальное время
 
         const score = document.getElementById('score');
         const levelDisplay = document.getElementById('level');
         const energyBar = document.getElementById('energy');
         const energyText = document.getElementById('energy-text');
         const maxEnergyText = document.getElementById('max-energy-text');
-        const tapButton = document.getElementById('tap-button');
         const upgradeEnergyButton = document.getElementById('upgrade-energy');
         const upgradeClicksButton = document.getElementById('upgrade-clicks');
         const homeTab = document.getElementById('home-tab');
@@ -252,7 +231,7 @@
 
         const restoreEnergy = () => {
             if (energy < maxEnergy) {
-                energy += 1; // Восстанавливаем 1 энергию каждую секунду
+                energy += pointsPerClick; // Восстанавливаем энергию равную кликам за тап
                 if (energy > maxEnergy) {
                     energy = maxEnergy; // Не превышаем максимальную энергию
                 }
@@ -260,7 +239,8 @@
             }
         };
 
-        tapButton.addEventListener('click', () => {
+        // Обработчик клика по кругу
+        const tapCircle = () => {
             if (energy > 0) {
                 const energyCost = pointsPerClick; // Расход энергии равен количеству полученных кликов
                 if (energy >= energyCost) {
@@ -271,7 +251,7 @@
                     updateStats(); // Обновляем статистику
                 }
             }
-        });
+        };
 
         upgradeEnergyButton.addEventListener('click', () => {
             if (taps >= upgradeEnergyCost) {
@@ -316,7 +296,6 @@
                     upgradeEnergyCost = data.upgradeEnergyCost || 50;
                     upgradeClicksCost = data.upgradeClicksCost || 50;
                     tapsForNextLevel = data.tapsForNextLevel || 10;
-                    lastEnergyUpdate = data.lastEnergyUpdate || Date.now(); // Если нет данных, берем текущее время
 
                     updateStats(); // Обновляем статистику
                 } else {
