@@ -127,6 +127,27 @@
             transform: translate(-50%, -50%);
             pointer-events: none;
         }
+        .upgrades {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .upgrade-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 120px;
+        }
+        .upgrade-btn img {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -146,7 +167,14 @@
             </div>
         </div>
 
-        <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
+        <div class="upgrades">
+            <button class="upgrade-btn" id="upgrade-energy">
+                <img src="energy-icon.png" alt="Energy"> Макс Энергия
+            </button>
+            <button class="upgrade-btn" id="upgrade-tap">
+                <img src="click-icon.png" alt="Click"> Клики за Тап
+            </button>
+        </div>
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -154,7 +182,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // Ваши настройки Firebase
+        // Firebase настройки
         const firebaseConfig = {
             apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
             authDomain: "whopper-a32f7.firebaseapp.com",
@@ -168,16 +196,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Получаем id пользователя Telegram
         const userId = Telegram.WebApp.initDataUnsafe.user.id;
 
-        // Игра
         let taps = 0;
         let level = 1;
         let energy = 3000;
         let maxEnergy = 3000;
         let pointsPerClick = 1;
-        let upgradeCost = 50;
+        let energyUpgradeCost = 100;
+        let tapUpgradeCost = 50;
         let tapsForNextLevel = 10;
         let lastEnergyUpdate = null;
 
@@ -187,7 +214,8 @@
         const energyBar = document.getElementById('energy');
         const energyText = document.getElementById('energy-text');
         const maxEnergyText = document.getElementById('max-energy-text');
-        const upgradeButton = document.getElementById('upgrade');
+        const upgradeEnergyBtn = document.getElementById('upgrade-energy');
+        const upgradeTapBtn = document.getElementById('upgrade-tap');
 
         const updateStats = () => {
             score.innerText = `Клики: ${taps}`;
@@ -195,17 +223,12 @@
             energyBar.style.width = `${(energy / maxEnergy) * 100}%`;
             energyText.innerText = `Энергия: ${energy}`;
             maxEnergyText.innerText = `Макс: ${maxEnergy}`;
-            upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
-            upgradeButton.disabled = taps < upgradeCost;
-
-            // Сохранение данных в Firestore
-            saveToFirestore();
         };
 
         const levelUp = () => {
             if (taps >= level * tapsForNextLevel) {
                 level += 1;
-                tapsForNextLevel *= 1.5;
+                tapsForNextLevel = Math.floor(tapsForNextLevel * 1.5);
                 updateStats();
             }
         };
@@ -219,7 +242,8 @@
                     energy: energy,
                     maxEnergy: maxEnergy,
                     pointsPerClick: pointsPerClick,
-                    upgradeCost: upgradeCost,
+                    energyUpgradeCost: energyUpgradeCost,
+                    tapUpgradeCost: tapUpgradeCost,
                     tapsForNextLevel: tapsForNextLevel,
                     lastEnergyUpdate: new Date().toISOString()
                 }, { merge: true });
@@ -241,7 +265,8 @@
                     energy = data.energy || 3000;
                     maxEnergy = data.maxEnergy || 3000;
                     pointsPerClick = data.pointsPerClick || 1;
-                    upgradeCost = data.upgradeCost || 50;
+                    energyUpgradeCost = data.energyUpgradeCost || 100;
+                    tapUpgradeCost = data.tapUpgradeCost || 50;
                     tapsForNextLevel = data.tapsForNextLevel || 10;
                     lastEnergyUpdate = data.lastEnergyUpdate || new Date().toISOString();
                     restoreEnergy();
@@ -275,28 +300,26 @@
                 energy -= 1;
                 levelUp();
                 updateStats();
-                showHitMarker();
             }
         });
 
-        upgradeButton.addEventListener('click', () => {
-            if (taps >= upgradeCost) {
-                taps -= upgradeCost;
-                pointsPerClick += 1;
-                upgradeCost = Math.floor(upgradeCost * 1.5);
+        upgradeEnergyBtn.addEventListener('click', () => {
+            if (taps >= energyUpgradeCost) {
+                taps -= energyUpgradeCost;
+                maxEnergy += 100; // Увеличение максимальной энергии
+                energyUpgradeCost = Math.floor(energyUpgradeCost * 1.5);
                 updateStats();
             }
         });
 
-        const showHitMarker = () => {
-            const hitMarker = document.createElement('div');
-            hitMarker.className = 'hitmarker';
-            hitMarker.innerText = `+${pointsPerClick}`;
-            hitMarker.style.left = `${Math.random() * 100}%`;
-            hitMarker.style.top = `${Math.random() * 100}%`;
-            document.body.appendChild(hitMarker);
-            setTimeout(() => hitMarker.remove(), 1000);
-        };
+        upgradeTapBtn.addEventListener('click', () => {
+            if (taps >= tapUpgradeCost) {
+                taps -= tapUpgradeCost;
+                pointsPerClick += 1; // Увеличение кликов за тап
+                tapUpgradeCost = Math.floor(tapUpgradeCost * 1.5);
+                updateStats();
+            }
+        });
 
         loadFromFirestore();
     </script>
