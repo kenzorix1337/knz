@@ -127,7 +127,7 @@
         }
 
         #upgrade-container {
-            display: flex; /* Flex для вертикального расположения */
+            display: flex;
             flex-direction: column;
             align-items: center;
             display: none; /* Скрыто по умолчанию */
@@ -148,6 +148,12 @@
             max-width: 600px;
             padding: 5px 0;
             border-bottom: 1px solid #444;
+        }
+
+        #burger {
+            width: 100px; /* Установите ширину изображения */
+            cursor: pointer;
+            margin: 20px 0;
         }
 
         .hitmarker {
@@ -178,7 +184,7 @@
             </div>
         </div>
 
-        <div id="burger" class="button">🍔</div>
+        <img id="burger" src="whoppe.png" alt="Бургер" />
 
         <div id="upgrade-container">
             <h3>Прокачка</h3>
@@ -201,7 +207,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
@@ -267,9 +273,9 @@
         });
 
         burger.addEventListener("click", () => {
-            if (energy > 0) {
+            if (energy >= pointsPerClick) { // Проверяем, хватает ли энергии для трат
                 taps += pointsPerClick;
-                energy = Math.max(0, energy - 10); // Тратим 10 энергии за тап
+                energy -= pointsPerClick; // Тратим энергию в зависимости от кликов
                 updateUI();
                 saveGame(); // Сохраняем игру после каждого нажатия
             } else {
@@ -301,6 +307,8 @@
                     playerElement.innerText = `${player.name.charAt(0)} - ${player.taps}`;
                     leaderboardList.appendChild(playerElement);
                 });
+            } else {
+                leaderboardList.innerHTML = 'Нет данных для отображения.';
             }
         }
 
