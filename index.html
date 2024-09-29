@@ -27,6 +27,8 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
         }
         h2 {
             margin-bottom: 20px;
@@ -128,6 +130,33 @@
             pointer-events: none;
             z-index: 1000; /* Ensure hitmarker is above other elements */
         }
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 400px;
+            margin-top: 20px;
+        }
+        .tab-button {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            flex: 1;
+            transition: background-color 0.3s;
+        }
+        .tab-button.active {
+            background-color: #e68a00;
+        }
+        .upgrade-section {
+            display: none;
+            text-align: center;
+        }
+        .upgrade-section.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -147,7 +176,20 @@
             </div>
         </div>
 
-        <button class="button" id="upgrade">Улучшить (Стоимость: 50)</button>
+        <div class="tabs">
+            <button class="tab-button active" id="main-tab">Главный экран</button>
+            <button class="tab-button" id="upgrade-tab">Прокачка</button>
+        </div>
+
+        <div id="main-screen" class="upgrade-section active">
+            <button class="button" id="tap-button">Тапнуть!</button>
+        </div>
+
+        <div id="upgrade-screen" class="upgrade-section">
+            <h2>Прокачка</h2>
+            <button class="button" id="upgrade-energy">Увеличить макс. энергию (Стоимость: 50)</button>
+            <button class="button" id="upgrade-clicks">Увеличить клики за тап (Стоимость: 50)</button>
+        </div>
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -178,7 +220,8 @@
         let energy = 3000;
         let maxEnergy = 3000;
         let pointsPerClick = 1;
-        let upgradeCost = 50;
+        let upgradeEnergyCost = 50;
+        let upgradeClicksCost = 50;
         let tapsForNextLevel = 10;
         let lastEnergyUpdate = Date.now(); // Устанавливаем начальное время
 
@@ -188,7 +231,13 @@
         const energyBar = document.getElementById('energy');
         const energyText = document.getElementById('energy-text');
         const maxEnergyText = document.getElementById('max-energy-text');
-        const upgradeButton = document.getElementById('upgrade');
+        const tapButton = document.getElementById('tap-button');
+        const upgradeEnergyButton = document.getElementById('upgrade-energy');
+        const upgradeClicksButton = document.getElementById('upgrade-clicks');
+        const mainTab = document.getElementById('main-tab');
+        const upgradeTab = document.getElementById('upgrade-tab');
+        const mainScreen = document.getElementById('main-screen');
+        const upgradeScreen = document.getElementById('upgrade-screen');
 
         const updateStats = () => {
             score.innerText = `Клики: ${taps}`;
@@ -196,63 +245,15 @@
             energyBar.style.width = `${(energy / maxEnergy) * 100}%`;
             energyText.innerText = `Энергия: ${energy}`;
             maxEnergyText.innerText = `Макс: ${maxEnergy}`;
-            upgradeButton.innerText = `Улучшить (Стоимость: ${upgradeCost})`;
-            upgradeButton.disabled = taps < upgradeCost;
-
-            // Сохранение данных в Firestore
-            saveToFirestore();
+            upgradeEnergyButton.innerText = `Увеличить макс. энергию (Стоимость: ${upgradeEnergyCost})`;
+            upgradeClicksButton.innerText = `Увеличить клики за тап (Стоимость: ${upgradeClicksCost})`;
         };
 
         const levelUp = () => {
-            if (taps >= level * tapsForNextLevel) {
-                level += 1;
+            if (taps >= tapsForNextLevel) {
+                level++;
                 tapsForNextLevel = Math.floor(tapsForNextLevel * 1.5);
-                maxEnergy += 500; // Увеличиваем максимальную энергию на 500
                 updateStats();
-            }
-        };
-
-        const saveToFirestore = async () => {
-            if (!userId) return;
-            try {
-                await setDoc(doc(db, 'users', userId.toString()), {
-                    taps: taps,
-                    level: level,
-                    energy: energy,
-                    maxEnergy: maxEnergy,
-                    pointsPerClick: pointsPerClick,
-                    upgradeCost: upgradeCost,
-                    tapsForNextLevel: tapsForNextLevel,
-                    lastEnergyUpdate: lastEnergyUpdate // Сохраняем время последнего обновления энергии
-                }, { merge: true });
-                console.log('Data saved to Firestore');
-            } catch (error) {
-                console.error('Error saving data:', error);
-            }
-        };
-
-        const loadFromFirestore = async () => {
-            if (!userId) return;
-            try {
-                const docRef = doc(db, 'users', userId.toString());
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    taps = data.taps || 0;
-                    level = data.level || 1;
-                    energy = data.energy || 3000;
-                    maxEnergy = data.maxEnergy || 3000;
-                    pointsPerClick = data.pointsPerClick || 1;
-                    upgradeCost = data.upgradeCost || 50;
-                    tapsForNextLevel = data.tapsForNextLevel || 10;
-                    lastEnergyUpdate = data.lastEnergyUpdate || Date.now(); // Если нет данных, берем текущее время
-
-                    updateStats(); // Обновляем статистику
-                } else {
-                    console.log('No such document!');
-                }
-            } catch (error) {
-                console.error('Error loading data:', error);
             }
         };
 
@@ -271,6 +272,10 @@
 
         burger.addEventListener('click', () => {
             restoreEnergy(); // Проверяем восстановление энергии при клике
+        });
+
+        tapButton.addEventListener('click', () => {
+            restoreEnergy(); // Проверяем восстановление энергии при тапе
 
             if (energy > 0) {
                 const energyCost = pointsPerClick; // Расход энергии равен количеству полученных кликов
@@ -284,11 +289,20 @@
             }
         });
 
-        upgradeButton.addEventListener('click', () => {
-            if (taps >= upgradeCost) {
-                taps -= upgradeCost;
-                pointsPerClick += 1;
-                upgradeCost = Math.floor(upgradeCost * 1.5);
+        upgradeEnergyButton.addEventListener('click', () => {
+            if (taps >= upgradeEnergyCost) {
+                taps -= upgradeEnergyCost;
+                maxEnergy += 500; // Увеличиваем максимальную энергию
+                upgradeEnergyCost *= 2; // Увеличиваем стоимость улучшения
+                updateStats();
+            }
+        });
+
+        upgradeClicksButton.addEventListener('click', () => {
+            if (taps >= upgradeClicksCost) {
+                taps -= upgradeClicksCost;
+                pointsPerClick += 1; // Увеличиваем клики за тап
+                upgradeClicksCost *= 2; // Увеличиваем стоимость улучшения
                 updateStats();
             }
         });
@@ -303,7 +317,51 @@
             setTimeout(() => hitMarker.remove(), 1000);
         };
 
+        const loadFromFirestore = async () => {
+            if (!userId) return;
+            try {
+                const docRef = doc(db, 'users', userId.toString());
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    taps = data.taps || 0;
+                    level = data.level || 1;
+                    energy = data.energy || 3000;
+                    maxEnergy = data.maxEnergy || 3000;
+                    pointsPerClick = data.pointsPerClick || 1;
+                    upgradeEnergyCost = data.upgradeEnergyCost || 50;
+                    upgradeClicksCost = data.upgradeClicksCost || 50;
+                    tapsForNextLevel = data.tapsForNextLevel || 10;
+                    lastEnergyUpdate = data.lastEnergyUpdate || Date.now(); // Если нет данных, берем текущее время
+
+                    updateStats(); // Обновляем статистику
+                } else {
+                    console.log('No such document!');
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        };
+
+        // Переключение между вкладками
+        mainTab.addEventListener('click', () => {
+            mainTab.classList.add('active');
+            upgradeTab.classList.remove('active');
+            mainScreen.classList.add('active');
+            upgradeScreen.classList.remove('active');
+            restoreEnergy(); // Восстанавливаем энергию, когда игрок на главном экране
+        });
+
+        upgradeTab.addEventListener('click', () => {
+            upgradeTab.classList.add('active');
+            mainTab.classList.remove('active');
+            upgradeScreen.classList.add('active');
+            mainScreen.classList.remove('active');
+            restoreEnergy(); // Восстанавливаем энергию, когда игрок на экране улучшений
+        });
+
         loadFromFirestore();
+        setInterval(restoreEnergy, 60000); // Восстановление энергии каждую минуту
     </script>
 </body>
 </html>
