@@ -201,7 +201,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
@@ -245,14 +245,16 @@
             document.getElementById("home-tab").classList.add("active");
             document.getElementById("upgrade-tab").classList.remove("active");
             document.getElementById("leaderboard-tab").classList.remove("active");
+            updateUI(); // Обновление интерфейса при возврате на главную
         });
 
         document.getElementById("upgrade-tab").addEventListener("click", () => {
             upgradeContainer.style.display = "flex"; // Отображаем прокачку
-            leaderboardContainer.style.display = "none";
+            leaderboardContainer.style.display = "none"; // Скрываем лидерборд
             document.getElementById("home-tab").classList.remove("active");
             document.getElementById("upgrade-tab").classList.add("active");
             document.getElementById("leaderboard-tab").classList.remove("active");
+            updateUI(); // Обновление интерфейса при переходе на вкладку прокачки
         });
 
         document.getElementById("leaderboard-tab").addEventListener("click", async () => {
@@ -261,88 +263,85 @@
             document.getElementById("home-tab").classList.remove("active");
             document.getElementById("upgrade-tab").classList.remove("active");
             document.getElementById("leaderboard-tab").classList.add("active");
-
-            // Получение данных с Firestore
-            const docRef = doc(db, "players", userId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                // Обновляем текущие клики
-                taps = docSnap.data().taps || 0;
-                scoreElement.innerHTML = `Клики: ${taps} <span>💰</span>`;
-            }
-
-            // Здесь можно загрузить топ 100 игроков
-            leaderboardList.innerHTML = ""; // Очищаем список перед добавлением
-            // Пример данных топа, в реальной ситуации необходимо получать их из базы данных
-            const topPlayers = [
-                { name: "Игрок1", taps: 500 },
-                { name: "Игрок2", taps: 400 },
-                { name: "Игрок3", taps: 350 },
-                { name: "Игрок4", taps: 300 },
-                { name: "Игрок5", taps: 250 },
-                // Добавьте остальных игроков...
-            ];
-
-            topPlayers.forEach(player => {
-                const playerElement = document.createElement("div");
-                playerElement.classList.add("leaderboard-item");
-                playerElement.innerHTML = `<span>${player.name.charAt(0)} 🆔</span><span>${player.taps} 💰</span>`;
-                leaderboardList.appendChild(playerElement);
-            });
+            await loadLeaderboard(); // Загрузка топ игроков
         });
 
-        // Обработчик нажатия на кнопку "Тап"
         burger.addEventListener("click", () => {
-            taps++;
-            scoreElement.innerHTML = `Клики: ${taps} <span>💰</span>`;
-            energyUpdate();
-
-            // Добавление хитмаркер
-            const hitmarker = document.createElement("div");
-            hitmarker.className = "hitmarker";
-            hitmarker.textContent = `+${pointsPerClick} 💰`;
-            document.body.appendChild(hitmarker);
-            hitmarker.style.left = `${event.clientX}px`;
-            hitmarker.style.top = `${event.clientY}px`;
-
-            setTimeout(() => {
-                hitmarker.remove();
-            }, 1000);
+            if (energy > 0) {
+                taps += pointsPerClick;
+                energy = Math.max(0, energy - 10); // Тратим 10 энергии за тап
+                updateUI();
+                saveGame(); // Сохраняем игру после каждого нажатия
+            } else {
+                alert("Не хватает энергии!");
+            }
         });
+
+        async function saveGame() {
+            await setDoc(doc(db, "players", userId), {
+                taps: taps,
+                level: level,
+                energy: energy,
+                maxEnergy: maxEnergy
+            }, { merge: true });
+        }
+
+        async function loadLeaderboard() {
+            const playersRef = doc(db, "players", "all");
+            const docSnap = await getDoc(playersRef);
+
+            leaderboardList.innerHTML = ''; // Очищаем список перед обновлением
+
+            if (docSnap.exists()) {
+                const players = docSnap.data().players || [];
+                players.sort((a, b) => b.taps - a.taps); // Сортируем по кликам
+                players.slice(0, 100).forEach(player => {
+                    const playerElement = document.createElement('div');
+                    playerElement.classList.add('leaderboard-item');
+                    playerElement.innerText = `${player.name.charAt(0)} - ${player.taps}`;
+                    leaderboardList.appendChild(playerElement);
+                });
+            }
+        }
+
+        function updateUI() {
+            scoreElement.innerText = `Клики: ${taps} 💰`;
+            levelElement.innerText = `Уровень: ${level} 🏆`;
+            energyElement.style.width = (energy / maxEnergy * 100) + "%";
+            energyTextElement.innerText = `Энергия: ${energy}`;
+            maxEnergyTextElement.innerText = `Макс: ${maxEnergy}`;
+
+            // Обновляем стоимость улучшений
+            document.getElementById("upgrade-cost").innerText = upgradeCost;
+            document.getElementById("max-energy-cost").innerText = maxEnergyCost;
+        }
 
         upgradeButton.addEventListener("click", () => {
             if (taps >= upgradeCost) {
                 taps -= upgradeCost;
-                pointsPerClick++;
-                upgradeCost = Math.floor(upgradeCost * 1.5);
-                scoreElement.innerHTML = `Клики: ${taps} <span>💰</span>`;
-                document.getElementById("upgrade-cost").innerText = upgradeCost;
+                pointsPerClick += 1;
+                upgradeCost = Math.floor(upgradeCost * 1.5); // Увеличиваем стоимость улучшения
+                updateUI();
+                saveGame(); // Сохраняем игру после улучшения
+            } else {
+                alert("Недостаточно кликов для улучшения!");
             }
         });
 
         upgradeMaxEnergyButton.addEventListener("click", () => {
             if (taps >= maxEnergyCost) {
                 taps -= maxEnergyCost;
-                maxEnergy += 1000;
-                energyUpdate();
-                maxEnergyCost = Math.floor(maxEnergyCost * 1.5);
-                scoreElement.innerHTML = `Клики: ${taps} <span>💰</span>`;
-                document.getElementById("max-energy-cost").innerText = maxEnergyCost;
+                maxEnergy += 500; // Увеличиваем максимальную энергию
+                maxEnergyCost = Math.floor(maxEnergyCost * 1.5); // Увеличиваем стоимость улучшения
+                updateUI();
+                saveGame(); // Сохраняем игру после улучшения
+            } else {
+                alert("Недостаточно кликов для улучшения!");
             }
         });
 
-        function energyUpdate() {
-            if (energy < maxEnergy) {
-                energy++;
-                energyElement.style.width = `${(energy / maxEnergy) * 100}%`;
-                energyTextElement.innerText = `Энергия: ${energy}`;
-                maxEnergyTextElement.innerText = `Макс: ${maxEnergy}`;
-            }
-        }
-
-        setInterval(() => {
-            energyUpdate();
-        }, 1000); // Обновление энергии каждую секунду
+        // Инициализация интерфейса
+        updateUI();
     </script>
 </body>
 </html>
