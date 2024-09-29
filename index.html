@@ -16,13 +16,15 @@
             height: 100vh;
             margin: 0;
             color: #333;
+            overflow: hidden;
         }
-        #game {
+        #game, #top-players {
             text-align: center;
             background: rgba(255, 255, 255, 0.9);
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: none; /* Скрываем топ игроков по умолчанию */
         }
         #score {
             font-size: 24px;
@@ -31,7 +33,8 @@
         #burger {
             width: 100px;
             height: 100px;
-            background-color: #ff9800;
+            background-image: url('https://your-image-url.com/image.png'); /* Замените на свой URL изображения */
+            background-size: cover;
             border-radius: 50%;
             margin: 20px auto;
             display: flex;
@@ -75,15 +78,46 @@
             border-radius: 10px;
             display: none;
         }
+        .player {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .player-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #ff5722;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            position: absolute;
+            bottom: 20px;
+        }
     </style>
 </head>
 <body>
-    <div id="game">
+    <div id="game" style="display: block;">
         <div id="score">Клики: 0</div>
         <div id="burger">🍔</div>
-        <button class="button" id="viewProfile">Профиль</button>
-        <button class="button" id="topButton">Топ Игроков</button>
-        <div id="top-players"></div>
+        <div class="navigation">
+            <button class="button" id="viewProfile">Профиль</button>
+            <button class="button" id="topButton">Топ Игроков</button>
+        </div>
+    </div>
+
+    <div id="top-players">
+        <h3>Топ 100 игроков:</h3>
+        <div id="players-list"></div>
+        <button class="button" id="backButton">Назад</button>
     </div>
 
     <script type="module">
@@ -103,13 +137,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let userId = '';
+        let userId = 'Ваш_никнейм'; // Замените на механизм получения никнейма
         let taps = 0;
 
         const burger = document.getElementById('burger');
         const score = document.getElementById('score');
         const topPlayersDiv = document.getElementById('top-players');
+        const playersList = document.getElementById('players-list');
         const topButton = document.getElementById('topButton');
+        const backButton = document.getElementById('backButton');
 
         burger.addEventListener('click', async (event) => {
             taps++;
@@ -141,13 +177,20 @@
         topButton.addEventListener('click', async () => {
             const q = query(collection(db, 'users'), orderBy('taps', 'desc'), limit(100));
             const querySnapshot = await getDocs(q);
-            let topPlayersHtml = '<h3>Топ 100 игроков:</h3>';
-            let rank = 1;
+            playersList.innerHTML = ''; // Очистить предыдущие данные
             querySnapshot.forEach(doc => {
-                topPlayersHtml += `<div>${rank++}. ${doc.id}: ${doc.data().taps} кликов</div>`;
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'player';
+                playerDiv.innerHTML = `<div class="player-icon">${doc.id.charAt(0).toUpperCase()}</div> ${doc.id}: ${doc.data().taps} кликов`;
+                playersList.appendChild(playerDiv);
             });
-            topPlayersDiv.innerHTML = topPlayersHtml;
             topPlayersDiv.style.display = 'block';
+            document.getElementById('game').style.display = 'none';
+        });
+
+        backButton.addEventListener('click', () => {
+            topPlayersDiv.style.display = 'none';
+            document.getElementById('game').style.display = 'block';
         });
     </script>
 </body>
