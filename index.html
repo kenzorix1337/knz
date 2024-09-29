@@ -87,7 +87,7 @@
 
         #energy-text {
             position: absolute;
-            left: 10px;
+            right: 10px; /* Перемещено правее */
             top: 50%;
             transform: translateY(-50%);
             color: #333;
@@ -98,7 +98,7 @@
 
         #max-energy-text {
             position: absolute;
-            right: 10px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
             color: #333;
@@ -151,7 +151,7 @@
         }
 
         #burger {
-            width: 100px; /* Установите ширину изображения */
+            width: 150px; /* Увеличен размер изображения */
             cursor: pointer;
             margin: 20px 0;
         }
@@ -222,7 +222,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const userId = Telegram.WebApp.initDataUnsafe.user.id;
+        const userId = Telegram.WebApp.initDataUnsafe.user.id; // Получаем Telegram ID
 
         let taps = 0;
         let level = 1;
@@ -276,12 +276,25 @@
             if (energy >= pointsPerClick) { // Проверяем, хватает ли энергии для трат
                 taps += pointsPerClick;
                 energy -= pointsPerClick; // Тратим энергию в зависимости от кликов
+                showHitmarker(event); // Показываем хитмаркер
                 updateUI();
                 saveGame(); // Сохраняем игру после каждого нажатия
             } else {
                 alert("Не хватает энергии!");
             }
         });
+
+        function showHitmarker(event) {
+            const hitmarker = document.createElement('div');
+            hitmarker.classList.add('hitmarker');
+            hitmarker.innerText = `+${pointsPerClick}`;
+            document.body.appendChild(hitmarker);
+            hitmarker.style.left = `${event.clientX}px`;
+            hitmarker.style.top = `${event.clientY}px`;
+            setTimeout(() => {
+                hitmarker.remove();
+            }, 1000);
+        }
 
         async function saveGame() {
             await setDoc(doc(db, "players", userId), {
