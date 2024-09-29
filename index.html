@@ -8,7 +8,7 @@
         body {
             font-family: 'Arial', sans-serif;
             background-color: #b3b3b3;
-            background-image: url('whoppe.png'); /* Замените на путь к вашему PNG изображению */
+            background-image: url('123.png');
             background-size: cover;
             background-position: center;
             display: flex;
@@ -18,11 +18,10 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            -webkit-tap-highlight-color: transparent; /* Убираем синий эффект на мобильных устройствах */
-            transition: background-color 0.3s ease-in-out; /* Плавная смена фона */
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s ease-in-out;
         }
 
-        /* Основные секции */
         #register, #login, #game, #leaderboard {
             display: none;
             text-align: center;
@@ -32,17 +31,10 @@
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
         }
 
-        #game {
-            display: block; /* Показываем игру по умолчанию */
-            flex-direction: column;
-            align-items: center;
-        }
-
         h2 {
             margin-bottom: 20px;
         }
 
-        /* Поля ввода */
         input {
             padding: 10px;
             margin: 5px;
@@ -52,7 +44,6 @@
             max-width: 300px;
         }
 
-        /* Кнопки */
         .button {
             background-color: #ff9800;
             color: white;
@@ -65,12 +56,12 @@
             width: 80%;
             max-width: 300px;
             position: relative;
-            transition: background-color 0.3s, transform 0.1s; /* Добавляем плавность */
+            transition: background-color 0.3s, transform 0.1s;
         }
 
         .button:active {
             background-color: #e68a00;
-            transform: scale(0.95); /* Уменьшаем кнопку при нажатии */
+            transform: scale(0.95);
         }
 
         .button:disabled {
@@ -78,7 +69,6 @@
             cursor: not-allowed;
         }
 
-        /* Бургер - улучшенная анимация */
         #burger {
             width: 50vw;
             height: 50vw;
@@ -95,10 +85,9 @@
         }
 
         #burger:active {
-            transform: scale(0.9); /* Уменьшаем бургер при нажатии */
+            transform: scale(0.9);
         }
 
-        /* Навигационная панель снизу */
         #navbar {
             position: fixed;
             bottom: 0;
@@ -122,7 +111,6 @@
             transform: scale(0.9);
         }
 
-        /* Секция для топа игроков */
         #leaderboard {
             display: flex;
             flex-direction: column;
@@ -155,7 +143,6 @@
             margin-right: 10px;
         }
 
-        /* Анимация хитмаркера */
         .hitmarker {
             position: absolute;
             background-color: rgba(255, 0, 0, 0.7);
@@ -164,8 +151,8 @@
             border-radius: 5px;
             font-size: 12px;
             transform: translate(-50%, -50%);
-            pointer-events: none; /* Чтобы не мешал другим элементам */
-            animation: fadeout 1s forwards; /* Анимация исчезновения */
+            pointer-events: none;
+            animation: fadeout 1s forwards;
         }
 
         @keyframes fadeout {
@@ -179,6 +166,26 @@
     </style>
 </head>
 <body>
+    <!-- Регистрация -->
+    <div id="register">
+        <h2>Регистрация</h2>
+        <input id="register-nickname" type="text" placeholder="Введите никнейм">
+        <input id="register-password" type="password" placeholder="Введите пароль">
+        <button id="registerButton" class="button">Регистрация</button>
+        <div id="register-error" style="color: red;"></div>
+        <p>Уже есть аккаунт? <a id="toLogin" href="#">Войти</a></p>
+    </div>
+
+    <!-- Логин -->
+    <div id="login">
+        <h2>Вход</h2>
+        <input id="login-nickname" type="text" placeholder="Введите никнейм">
+        <input id="login-password" type="password" placeholder="Введите пароль">
+        <button id="loginButton" class="button">Войти</button>
+        <div id="login-error" style="color: red;"></div>
+        <p>Нет аккаунта? <a id="toRegister" href="#">Зарегистрироваться</a></p>
+    </div>
+
     <!-- Игра -->
     <div id="game">
         <h2>Тапай на бургер!</h2>
@@ -206,7 +213,6 @@
         <div id="leaderboardButton" class="nav-button">🏆</div>
     </div>
 
-    <!-- Firebase SDK и скрипты -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -233,12 +239,22 @@
         const score = document.getElementById('score');
         const energyText = document.getElementById('energy-text');
         const energyBar = document.getElementById('energy');
+        const maxEnergyText = document.getElementById('max-energy-text');
+
         const homeButton = document.getElementById('homeButton');
         const leaderboardButton = document.getElementById('leaderboardButton');
         const gameDiv = document.getElementById('game');
         const leaderboardDiv = document.getElementById('leaderboard');
         const playerRank = document.getElementById('playerRank');
         const topPlayersDiv = document.getElementById('topPlayers');
+        const registerDiv = document.getElementById('register');
+        const loginDiv = document.getElementById('login');
+        const registerButton = document.getElementById('registerButton');
+        const loginButton = document.getElementById('loginButton');
+        const toRegister = document.getElementById('toRegister');
+        const toLogin = document.getElementById('toLogin');
+        const registerError = document.getElementById('register-error');
+        const loginError = document.getElementById('login-error');
 
         // Смена экранов
         homeButton.addEventListener('click', () => {
@@ -249,21 +265,81 @@
         leaderboardButton.addEventListener('click', () => {
             gameDiv.style.display = 'none';
             leaderboardDiv.style.display = 'block';
-            loadLeaderboard(); // Загрузка топа игроков
+            loadLeaderboard();
         });
+
+        toRegister.addEventListener('click', () => {
+            loginDiv.style.display = 'none';
+            registerDiv.style.display = 'block';
+        });
+
+        toLogin.addEventListener('click', () => {
+            registerDiv.style.display = 'none';
+            loginDiv.style.display = 'block';
+        });
+
+        // Регистрация
+        registerButton.addEventListener('click', async () => {
+            const nickname = document.getElementById('register-nickname').value;
+            const password = document.getElementById('register-password').value;
+            if (nickname && password) {
+                const userDoc = doc(db, 'users', nickname);
+                const userSnapshot = await getDoc(userDoc);
+                if (userSnapshot.exists()) {
+                    registerError.innerText = 'Никнейм уже используется!';
+                } else {
+                    await setDoc(userDoc, { nickname, password, taps: 0, maxEnergy });
+                    userId = nickname;
+                    registerDiv.style.display = 'none';
+                    gameDiv.style.display = 'block';
+                    loadUserData();
+                }
+            }
+        });
+
+        // Логин
+        loginButton.addEventListener('click', async () => {
+            const nickname = document.getElementById('login-nickname').value;
+            const password = document.getElementById('login-password').value;
+            if (nickname && password) {
+                const userDoc = doc(db, 'users', nickname);
+                const userSnapshot = await getDoc(userDoc);
+                if (userSnapshot.exists() && userSnapshot.data().password === password) {
+                    userId = nickname;
+                    loginDiv.style.display = 'none';
+                    gameDiv.style.display = 'block';
+                    loadUserData();
+                } else {
+                    loginError.innerText = 'Неправильный никнейм или пароль!';
+                }
+            }
+        });
+
+        // Загрузка данных игрока
+        const loadUserData = async () => {
+            const userDoc = doc(db, 'users', userId);
+            const userSnapshot = await getDoc(userDoc);
+            if (userSnapshot.exists()) {
+                const userData = userSnapshot.data();
+                taps = userData.taps;
+                maxEnergy = userData.maxEnergy;
+                energy = maxEnergy;
+                score.innerText = `Клики: ${taps}`;
+                energyText.innerText = `Энергия: ${energy}`;
+                energyBar.style.width = `${(energy / maxEnergy) * 100}%`;
+                maxEnergyText.innerText = `Макс: ${maxEnergy}`;
+            }
+        };
 
         // Хитмаркер при клике
         burger.addEventListener('click', (event) => {
             if (energy > 0) {
                 taps++;
                 energy--;
-
-                // Обновление интерфейса
                 score.innerText = `Клики: ${taps}`;
                 energyText.innerText = `Энергия: ${energy}`;
                 energyBar.style.width = `${(energy / maxEnergy) * 100}%`;
 
-                // Позиция хитмаркера
                 const hitmarker = document.createElement('div');
                 hitmarker.className = 'hitmarker';
                 hitmarker.innerText = '+1';
