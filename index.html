@@ -206,7 +206,7 @@
         const levelUp = () => {
             if (taps >= level * tapsForNextLevel) {
                 level += 1;
-                tapsForNextLevel *= 1.5;
+                tapsForNextLevel = Math.floor(tapsForNextLevel * 1.5);
                 maxEnergy += 500; // Увеличиваем максимальную энергию на 500
                 updateStats();
             }
@@ -281,12 +281,12 @@
 
         burger.addEventListener('click', () => {
             if (energy > 0) {
-                const energyCost = pointsPerClick * 0.5; // Расход энергии 50% от очков
+                const energyCost = pointsPerClick; // Расход энергии равен количеству полученных кликов
                 if (energy >= energyCost) {
                     taps += pointsPerClick;
                     energy -= energyCost; // Уменьшаем энергию
                     levelUp();
-                    showHitMarker();
+                    showHitMarker(pointsPerClick); // Отображаем хитмаркер с количеством кликов
                     updateEnergy(); // Обновляем энергию
                 }
             }
@@ -301,10 +301,10 @@
             }
         });
 
-        const showHitMarker = () => {
+        const showHitMarker = (points) => {
             const hitMarker = document.createElement('div');
             hitMarker.className = 'hitmarker';
-            hitMarker.innerText = `+${pointsPerClick}`;
+            hitMarker.innerText = `+${points}`;
             hitMarker.style.left = `${Math.random() * 100}%`;
             hitMarker.style.top = `${Math.random() * 100}%`;
             document.body.appendChild(hitMarker);
