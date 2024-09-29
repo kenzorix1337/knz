@@ -11,24 +11,16 @@
             color: white;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
             height: 100vh;
             margin: 0;
             overflow: hidden;
         }
-
-        #game {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex-grow: 1;
-            text-align: center;
-        }
-
         h2 {
             margin-bottom: 20px;
+            color: white;
         }
-
         .button {
             background-color: #ff9800;
             color: white;
@@ -40,22 +32,28 @@
             margin: 10px 0;
             width: 80%;
             max-width: 300px;
-            transition: background-color 0.3s, transform 0.1s;
         }
-
-        .button:active {
-            background-color: #e68a00;
-            transform: scale(0.95);
+        #burger {
+            width: 50vw;
+            height: 50vw;
+            max-width: 400px;
+            max-height: 400px;
+            background-image: url('whoppe.png');
+            background-size: cover;
+            margin: 30px;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
         }
-
         #stats {
             display: flex;
             justify-content: space-around;
             width: 100%;
             max-width: 600px;
             margin-top: 20px;
+            color: white;
+            font-weight: bold;
         }
-
         #energy-bar-container {
             width: 100%;
             max-width: 600px;
@@ -63,17 +61,15 @@
             text-align: center;
             position: relative;
         }
-
         #energy-bar {
             width: 100%;
-            background-color: #ddd;
+            background-color: #333;
             border-radius: 20px;
             overflow: hidden;
             margin: 10px 0;
             position: relative;
             height: 40px;
         }
-
         #energy {
             height: 100%;
             background-color: #76c7c0;
@@ -84,124 +80,154 @@
             top: 0;
             transition: width 0.1s;
         }
-
         #energy-text {
-            position: absolute;
-            right: 10px; /* Перемещено правее */
-            top: 50%;
-            transform: translateY(-50%);
-            color: #333;
-            font-size: 14px;
-            font-weight: bold;
-            z-index: 1;
-        }
-
-        #max-energy-text {
             position: absolute;
             left: 10px;
             top: 50%;
             transform: translateY(-50%);
-            color: #333;
+            color: white;
             font-size: 14px;
             font-weight: bold;
-            z-index: 1;
         }
-
-        #tabs {
+        #max-energy-text {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .upgrades {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .upgrade-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 200px;
+            margin-bottom: 10px;
+        }
+        .nav-panel {
             display: flex;
             justify-content: space-around;
-            background-color: #1a1a2e;
-            padding: 10px;
-            border-top: 2px solid #ff9800;
+            width: 100%;
+            max-width: 600px;
+            background-color: #333;
+            position: fixed;
+            bottom: 0;
+            left: 0;
         }
-
-        .tab {
-            cursor: pointer;
-            padding: 10px;
+        .nav-item {
             color: white;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 24px;
+            flex: 1;
             text-align: center;
         }
-
-        .active {
-            border-bottom: 2px solid #ff9800;
+        .nav-item.active {
+            background-color: #ff9800;
         }
-
-        #upgrade-container {
+        .leaderboard {
             display: flex;
             flex-direction: column;
             align-items: center;
-            display: none; /* Скрыто по умолчанию */
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
         }
-
-        #leaderboard {
-            display: none; /* Скрыто по умолчанию */
-            flex-direction: column;
-            align-items: center;
-            overflow-y: auto;
-            max-height: 60vh; /* Ограничение высоты для скроллинга */
-        }
-
-        .leaderboard-item {
+        .player {
             display: flex;
             justify-content: space-between;
             width: 100%;
-            max-width: 600px;
-            padding: 5px 0;
-            border-bottom: 1px solid #444;
-        }
-
-        #burger {
-            width: 150px; /* Увеличен размер изображения */
-            cursor: pointer;
-            margin: 20px 0;
-        }
-
-        .hitmarker {
-            position: absolute;
-            background-color: rgba(255, 0, 0, 0.7);
-            color: white;
-            padding: 5px;
+            padding: 10px;
+            background-color: #2d2d44;
             border-radius: 5px;
-            font-size: 12px;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
+            margin: 5px 0;
+        }
+        .player-icon {
+            background-color: #ff9800;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: white;
+            margin-right: 10px;
+        }
+        .player-name {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        .player-clicks {
+            color: #ffeb3b;
+        }
+        .icon {
+            margin-right: 5px;
+        }
+        #score .icon {
+            color: gold;
+        }
+        #level .icon {
+            color: #ffeb3b;
+        }
+        #energy-bar .icon {
+            color: #76c7c0;
         }
     </style>
 </head>
 <body>
+    <!-- Главная часть игры -->
     <div id="game">
         <div id="stats">
-            <div id="score">Клики: 0 <span>💰</span></div>
-            <div id="level">Уровень: 1 <span>🏆</span></div>
+            <div id="score"><span class="icon">💰</span> Клики: 0</div>
+            <div id="level"><span class="icon">🏆</span> Уровень: 1</div>
         </div>
+
+        <div id="burger"></div>
 
         <div id="energy-bar-container">
             <div id="energy-bar">
                 <div id="energy"></div>
                 <div id="energy-text">Энергия: 3000</div>
                 <div id="max-energy-text">Макс: 3000</div>
-                <span style="position: absolute; left: 10px; top: 10px;">⚡</span>
             </div>
-        </div>
-
-        <img id="burger" src="whoppe.png" alt="Бургер" />
-
-        <div id="upgrade-container">
-            <h3>Прокачка</h3>
-            <div class="button" id="upgrade">Улучшить Клики за тап (Стоимость: <span id="upgrade-cost">50</span>)</div>
-            <div class="button" id="upgrade-max-energy">Улучшить Макс Энергия (Стоимость: <span id="max-energy-cost">100</span>)</div>
-        </div>
-
-        <div id="leaderboard">
-            <h3>Топ 100 Игроков</h3>
-            <div id="leaderboard-list"></div>
         </div>
     </div>
 
-    <div id="tabs">
-        <div class="tab active" id="home-tab">🏠 Главная</div>
-        <div class="tab" id="upgrade-tab">🚀 Прокачка</div>
-        <div class="tab" id="leaderboard-tab">🏆 Лидерборд</div>
+    <!-- Вкладка с улучшениями -->
+    <div id="upgrades">
+        <h2>Улучшения</h2>
+        <div class="upgrades">
+            <button class="upgrade-btn" id="upgrade-energy">⚡ Макс Энергия - 100</button>
+            <button class="upgrade-btn" id="upgrade-tap">👆 Клики за Тап - 50</button>
+        </div>
+    </div>
+
+    <!-- Вкладка с топ-игроками -->
+    <div id="leaderboard">
+        <h2>Топ 100 Игроков</h2>
+        <div class="leaderboard" id="leaderboard-list">
+            <!-- Игроки будут добавляться сюда динамически -->
+        </div>
+    </div>
+
+    <!-- Панель навигации -->
+    <div class="nav-panel">
+        <div class="nav-item" id="home">🏠</div>
+        <div class="nav-item" id="upgrade">🚀</div>
+        <div class="nav-item" id="leaderboard-tab">🏆</div>
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -209,160 +235,108 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
+        // Firebase настройки
         const firebaseConfig = {
-            apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
+            apiKey: "API_KEY",
             authDomain: "whopper-a32f7.firebaseapp.com",
             projectId: "whopper-a32f7",
             storageBucket: "whopper-a32f7.appspot.com",
             messagingSenderId: "701387895307",
             appId: "1:701387895307:web:cc656083f5f0ed1c590d0e",
-            measurementId: "G-PQ6JZEZMEP"
+            measurementId: "G-MEASUREMENT_ID"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const telegram = window.Telegram.WebApp;
 
-        const userId = Telegram.WebApp.initDataUnsafe.user.id; // Получаем Telegram ID
-
+        // Инициализация переменных
         let taps = 0;
         let level = 1;
         let energy = 3000;
         let maxEnergy = 3000;
         let pointsPerClick = 1;
         let upgradeCost = 50;
-        let maxEnergyCost = 100;
+        let userId = telegram.initDataUnsafe.user.id;
 
-        const burger = document.getElementById("burger");
-        const scoreElement = document.getElementById("score");
-        const levelElement = document.getElementById("level");
-        const energyElement = document.getElementById("energy");
-        const energyTextElement = document.getElementById("energy-text");
-        const maxEnergyTextElement = document.getElementById("max-energy-text");
-        const upgradeContainer = document.getElementById("upgrade-container");
-        const leaderboardContainer = document.getElementById("leaderboard");
-        const leaderboardList = document.getElementById("leaderboard-list");
-
-        const upgradeButton = document.getElementById("upgrade");
-        const upgradeMaxEnergyButton = document.getElementById("upgrade-max-energy");
-
-        document.getElementById("home-tab").addEventListener("click", () => {
-            upgradeContainer.style.display = "none";
-            leaderboardContainer.style.display = "none";
-            document.getElementById("home-tab").classList.add("active");
-            document.getElementById("upgrade-tab").classList.remove("active");
-            document.getElementById("leaderboard-tab").classList.remove("active");
-            updateUI(); // Обновление интерфейса при возврате на главную
-        });
-
-        document.getElementById("upgrade-tab").addEventListener("click", () => {
-            upgradeContainer.style.display = "flex"; // Отображаем прокачку
-            leaderboardContainer.style.display = "none"; // Скрываем лидерборд
-            document.getElementById("home-tab").classList.remove("active");
-            document.getElementById("upgrade-tab").classList.add("active");
-            document.getElementById("leaderboard-tab").classList.remove("active");
-            updateUI(); // Обновление интерфейса при переходе на вкладку прокачки
-        });
-
-        document.getElementById("leaderboard-tab").addEventListener("click", async () => {
-            upgradeContainer.style.display = "none";
-            leaderboardContainer.style.display = "flex"; // Отображаем лидерборд
-            document.getElementById("home-tab").classList.remove("active");
-            document.getElementById("upgrade-tab").classList.remove("active");
-            document.getElementById("leaderboard-tab").classList.add("active");
-            await loadLeaderboard(); // Загрузка топ игроков
-        });
-
-        burger.addEventListener("click", () => {
-            if (energy >= pointsPerClick) { // Проверяем, хватает ли энергии для трат
+        // Обработчик нажатия на бургер
+        document.getElementById("burger").addEventListener("click", async () => {
+            if (energy >= pointsPerClick) {
                 taps += pointsPerClick;
-                energy -= pointsPerClick; // Тратим энергию в зависимости от кликов
-                showHitmarker(event); // Показываем хитмаркер
+                energy -= pointsPerClick;
+                await saveGame(); // Сохраняем игру после каждого нажатия
                 updateUI();
-                saveGame(); // Сохраняем игру после каждого нажатия
             } else {
                 alert("Не хватает энергии!");
             }
         });
 
-        function showHitmarker(event) {
-            const hitmarker = document.createElement('div');
-            hitmarker.classList.add('hitmarker');
-            hitmarker.innerText = `+${pointsPerClick}`;
-            document.body.appendChild(hitmarker);
-            hitmarker.style.left = `${event.clientX}px`;
-            hitmarker.style.top = `${event.clientY}px`;
-            setTimeout(() => {
-                hitmarker.remove();
-            }, 1000);
-        }
-
         async function saveGame() {
-            await setDoc(doc(db, "players", userId), {
-                taps: taps,
-                level: level,
-                energy: energy,
-                maxEnergy: maxEnergy
-            }, { merge: true });
-        }
-
-        async function loadLeaderboard() {
-            const playersRef = doc(db, "players", "all");
-            const docSnap = await getDoc(playersRef);
-
-            leaderboardList.innerHTML = ''; // Очищаем список перед обновлением
-
-            if (docSnap.exists()) {
-                const players = docSnap.data().players || [];
-                players.sort((a, b) => b.taps - a.taps); // Сортируем по кликам
-                players.slice(0, 100).forEach(player => {
-                    const playerElement = document.createElement('div');
-                    playerElement.classList.add('leaderboard-item');
-                    playerElement.innerText = `${player.name.charAt(0)} - ${player.taps}`;
-                    leaderboardList.appendChild(playerElement);
-                });
-            } else {
-                leaderboardList.innerHTML = 'Нет данных для отображения.';
+            try {
+                await setDoc(doc(db, "players", userId.toString()), {
+                    taps: taps,
+                    level: level,
+                    energy: energy,
+                    maxEnergy: maxEnergy
+                }, { merge: true });
+                console.log("Данные успешно сохранены!");
+            } catch (e) {
+                console.error("Ошибка сохранения данных: ", e);
             }
         }
 
         function updateUI() {
-            scoreElement.innerText = `Клики: ${taps} 💰`;
-            levelElement.innerText = `Уровень: ${level} 🏆`;
-            energyElement.style.width = (energy / maxEnergy * 100) + "%";
-            energyTextElement.innerText = `Энергия: ${energy}`;
-            maxEnergyTextElement.innerText = `Макс: ${maxEnergy}`;
-
-            // Обновляем стоимость улучшений
-            document.getElementById("upgrade-cost").innerText = upgradeCost;
-            document.getElementById("max-energy-cost").innerText = maxEnergyCost;
+            document.getElementById("score").innerText = `Клики: ${taps}`;
+            document.getElementById("level").innerText = `Уровень: ${level}`;
+            document.getElementById("energy").style.width = `${(energy / maxEnergy) * 100}%`;
+            document.getElementById("energy-text").innerText = `Энергия: ${energy}`;
         }
 
-        upgradeButton.addEventListener("click", () => {
+        document.getElementById("upgrade-energy").addEventListener("click", () => {
             if (taps >= upgradeCost) {
+                maxEnergy += 100;
                 taps -= upgradeCost;
+                upgradeCost += 50; // Увеличиваем стоимость следующего улучшения
+                alert("Максимальная энергия увеличена!");
+                saveGame(); // Сохраняем данные после улучшения
+                updateUI();
+            } else {
+                alert("Недостаточно кликов для улучшения!");
+            }
+        });
+
+        document.getElementById("upgrade-tap").addEventListener("click", () => {
+            if (taps >= upgradeCost) {
                 pointsPerClick += 1;
-                upgradeCost = Math.floor(upgradeCost * 1.5); // Увеличиваем стоимость улучшения
+                taps -= upgradeCost;
+                alert("Клики за тап увеличены!");
+                saveGame(); // Сохраняем данные после улучшения
                 updateUI();
-                saveGame(); // Сохраняем игру после улучшения
             } else {
                 alert("Недостаточно кликов для улучшения!");
             }
         });
 
-        upgradeMaxEnergyButton.addEventListener("click", () => {
-            if (taps >= maxEnergyCost) {
-                taps -= maxEnergyCost;
-                maxEnergy += 500; // Увеличиваем максимальную энергию
-                maxEnergyCost = Math.floor(maxEnergyCost * 1.5); // Увеличиваем стоимость улучшения
+        // Загрузка данных пользователя
+        async function loadUserData() {
+            const docRef = doc(db, "players", userId.toString());
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                taps = data.taps || 0;
+                level = data.level || 1;
+                energy = data.energy || 3000;
+                maxEnergy = data.maxEnergy || 3000;
+                pointsPerClick = data.pointsPerClick || 1;
+                upgradeCost = data.upgradeCost || 50;
                 updateUI();
-                saveGame(); // Сохраняем игру после улучшения
             } else {
-                alert("Недостаточно кликов для улучшения!");
+                console.log("Пользователь не найден, создаем нового.");
+                await saveGame(); // Создаем нового пользователя, если данных нет
             }
-        });
+        }
 
-        // Инициализация интерфейса
-        updateUI();
+        loadUserData(); // Загружаем данные пользователя при загрузке страницы
     </script>
 </body>
 </html>
