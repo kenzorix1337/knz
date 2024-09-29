@@ -8,7 +8,6 @@
         body {
             font-family: 'Arial', sans-serif;
             background-color: #b3b3b3;
-            background-image: url('123.png');
             background-size: cover;
             background-position: center;
             display: flex;
@@ -21,7 +20,15 @@
             -webkit-tap-highlight-color: transparent;
         }
         #game {
-            display: block;
+            display: none;
+            text-align: center;
+            background: rgba(120, 120, 120, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        #upgrades {
+            display: none;
             text-align: center;
             background: rgba(120, 120, 120, 0.9);
             padding: 20px;
@@ -126,6 +133,11 @@
             font-size: 12px;
             transform: translate(-50%, -50%);
             pointer-events: none;
+            animation: fade-out 1s forwards;
+        }
+        @keyframes fade-out {
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
         .upgrades {
             display: flex;
@@ -142,11 +154,26 @@
             font-size: 16px;
             width: 120px;
         }
-        .upgrade-btn img {
-            width: 20px;
-            height: 20px;
-            vertical-align: middle;
-            margin-right: 5px;
+        .nav-panel {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 600px;
+            background-color: #333;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+        }
+        .nav-item {
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 24px;
+            flex: 1;
+            text-align: center;
+        }
+        .nav-item.active {
+            background-color: #ff9800;
         }
     </style>
 </head>
@@ -166,15 +193,19 @@
                 <div id="max-energy-text">Макс: 3000</div>
             </div>
         </div>
+    </div>
 
+    <div id="upgrades">
+        <h2>Улучшения</h2>
         <div class="upgrades">
-            <button class="upgrade-btn" id="upgrade-energy">
-                <img src="energy-icon.png" alt="Energy"> Макс Энергия
-            </button>
-            <button class="upgrade-btn" id="upgrade-tap">
-                <img src="click-icon.png" alt="Click"> Клики за Тап
-            </button>
+            <button class="upgrade-btn" id="upgrade-energy">⚡ Макс Энергия</button>
+            <button class="upgrade-btn" id="upgrade-tap">👆 Клики за Тап</button>
         </div>
+    </div>
+
+    <div class="nav-panel">
+        <div class="nav-item" id="home">🏠</div>
+        <div class="nav-item" id="upgrade">🚀</div>
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -214,8 +245,25 @@
         const energyBar = document.getElementById('energy');
         const energyText = document.getElementById('energy-text');
         const maxEnergyText = document.getElementById('max-energy-text');
-        const upgradeEnergyBtn = document.getElementById('upgrade-energy');
-        const upgradeTapBtn = document.getElementById('upgrade-tap');
+        const home = document.getElementById('home');
+        const upgradeTab = document.getElementById('upgrade');
+        const gameSection = document.getElementById('game');
+        const upgradeSection = document.getElementById('upgrades');
+        
+        // Навигация
+        home.addEventListener('click', () => {
+            gameSection.style.display = 'block';
+            upgradeSection.style.display = 'none';
+            home.classList.add('active');
+            upgradeTab.classList.remove('active');
+        });
+
+        upgradeTab.addEventListener('click', () => {
+            gameSection.style.display = 'none';
+            upgradeSection.style.display = 'block';
+            home.classList.remove('active');
+            upgradeTab.classList.add('active');
+        });
 
         const updateStats = () => {
             score.innerText = `Клики: ${taps}`;
@@ -226,28 +274,25 @@
         };
 
         const levelUp = () => {
-            if (taps >= level * tapsForNextLevel) {
-                level += 1;
+            if (taps >= tapsForNextLevel) {
+                level++;
                 tapsForNextLevel = Math.floor(tapsForNextLevel * 1.5);
-                updateStats();
             }
         };
 
         const saveToFirestore = async () => {
-            if (!userId) return;
             try {
                 await setDoc(doc(db, 'users', userId.toString()), {
-                    taps: taps,
-                    level: level,
-                    energy: energy,
-                    maxEnergy: maxEnergy,
-                    pointsPerClick: pointsPerClick,
-                    energyUpgradeCost: energyUpgradeCost,
-                    tapUpgradeCost: tapUpgradeCost,
-                    tapsForNextLevel: tapsForNextLevel,
+                    taps,
+                    level,
+                    energy,
+                    maxEnergy,
+                    pointsPerClick,
+                    energyUpgradeCost,
+                    tapUpgradeCost,
+                    tapsForNextLevel,
                     lastEnergyUpdate: new Date().toISOString()
                 }, { merge: true });
-                console.log('Data saved to Firestore');
             } catch (error) {
                 console.error('Error saving data:', error);
             }
@@ -283,7 +328,7 @@
             const now = new Date();
             if (lastEnergyUpdate) {
                 const timeDiff = now - new Date(lastEnergyUpdate);
-                const energyRestoration = Math.floor(timeDiff / (1000 * 60)); // энергия восстанавливается каждую минуту
+                const energyRestoration = Math.floor(timeDiff / 1000) * pointsPerClick; // Энергия восстанавливается каждую секунду на количество кликов за тап
                 if (energy < maxEnergy) {
                     energy += energyRestoration;
                     if (energy > maxEnergy) {
@@ -291,37 +336,50 @@
                     }
                 }
                 lastEnergyUpdate = now.toISOString();
+                saveToFirestore(); // Сохранение обновленного времени и энергии
             }
         };
 
-        burger.addEventListener('click', () => {
-            if (energy > 0) {
+        burger.addEventListener('click', (event) => {
+            if (energy >= pointsPerClick) {
                 taps += pointsPerClick;
-                energy -= 1;
+                energy -= pointsPerClick;
                 levelUp();
                 updateStats();
+
+                // Хитмаркер
+                const hitMarker = document.createElement('div');
+                hitMarker.className = 'hitmarker';
+                hitMarker.style.left = `${event.clientX}px`;
+                hitMarker.style.top = `${event.clientY}px`;
+                hitMarker.innerText = `+${pointsPerClick}`;
+                document.body.appendChild(hitMarker);
+                setTimeout(() => {
+                    hitMarker.remove();
+                }, 1000);
             }
         });
 
-        upgradeEnergyBtn.addEventListener('click', () => {
+        document.getElementById('upgrade-energy').addEventListener('click', () => {
             if (taps >= energyUpgradeCost) {
                 taps -= energyUpgradeCost;
-                maxEnergy += 100; // Увеличение максимальной энергии
+                maxEnergy += 100;
                 energyUpgradeCost = Math.floor(energyUpgradeCost * 1.5);
                 updateStats();
             }
         });
 
-        upgradeTapBtn.addEventListener('click', () => {
+        document.getElementById('upgrade-tap').addEventListener('click', () => {
             if (taps >= tapUpgradeCost) {
                 taps -= tapUpgradeCost;
-                pointsPerClick += 1; // Увеличение кликов за тап
+                pointsPerClick += 1;
                 tapUpgradeCost = Math.floor(tapUpgradeCost * 1.5);
                 updateStats();
             }
         });
 
         loadFromFirestore();
+        setInterval(restoreEnergy, 1000); // Восстановление энергии каждые 1000 мс (1 секунда)
     </script>
 </body>
 </html>
