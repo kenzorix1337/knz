@@ -44,6 +44,11 @@
             cursor: pointer;
             border-radius: 50%;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        /* Анимация для бургера */
+        #burger:active {
+            transform: scale(0.95);
         }
         #stats {
             display: flex;
@@ -78,7 +83,7 @@
             position: absolute;
             left: 0;
             top: 0;
-            transition: width 0.1s;
+            transition: width 0.3s ease;
         }
         #energy-text {
             position: absolute;
@@ -185,6 +190,20 @@
         #energy-bar .icon {
             color: #76c7c0;
         }
+
+        /* Стиль для хитмаркера */
+        .hitmarker {
+            position: absolute;
+            font-size: 30px;
+            color: #ff9800;
+            animation: hitMarkerAnimation 0.5s ease-out;
+        }
+
+        /* Анимация для хитмаркера */
+        @keyframes hitMarkerAnimation {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-30px) scale(0.5); }
+        }
     </style>
 </head>
 <body>
@@ -207,7 +226,7 @@
     </div>
 
     <!-- Вкладка с улучшениями -->
-    <div id="upgrades">
+    <div id="upgrades" style="display: none;">
         <h2>Улучшения</h2>
         <div class="upgrades">
             <button class="upgrade-btn" id="upgrade-energy">⚡ Макс Энергия - 100</button>
@@ -216,7 +235,7 @@
     </div>
 
     <!-- Вкладка с топ-игроками -->
-    <div id="leaderboard">
+    <div id="leaderboard" style="display: none;">
         <h2>Топ 100 Игроков</h2>
         <div class="leaderboard" id="leaderboard-list">
             <!-- Игроки будут добавляться сюда динамически -->
@@ -225,7 +244,7 @@
 
     <!-- Панель навигации -->
     <div class="nav-panel">
-        <div class="nav-item" id="home">🏠</div>
+        <div class="nav-item active" id="home">🏠</div>
         <div class="nav-item" id="upgrade">🚀</div>
         <div class="nav-item" id="leaderboard-tab">🏆</div>
     </div>
@@ -259,11 +278,33 @@
         let upgradeCost = 50;
         let userId = telegram.initDataUnsafe.user.id;
 
+        // Восстановление энергии каждые 3 секунды
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy += 10; // Количество восстанавливаемой энергии
+                if (energy > maxEnergy) {
+                    energy = maxEnergy;
+                }
+                updateUI();
+            }
+        }, 3000);
+
         // Обработчик нажатия на бургер
-        document.getElementById("burger").addEventListener("click", async () => {
+        document.getElementById("burger").addEventListener("click", async (event) => {
             if (energy >= pointsPerClick) {
                 taps += pointsPerClick;
                 energy -= pointsPerClick;
+
+                // Добавление хитмаркера
+                const hitmarker = document.createElement('div');
+                hitmarker.innerText = "+1";
+                hitmarker.classList.add('hitmarker');
+                hitmarker.style.left = `${event.clientX - 15}px`; // Позиционируем хитмаркер
+                hitmarker.style.top = `${event.clientY - 15}px`;
+                document.body.appendChild(hitmarker);
+
+                setTimeout(() => hitmarker.remove(), 500); // Убираем через 0.5 секунды
+
                 await saveGame(); // Сохраняем игру после каждого нажатия
                 updateUI();
             } else {
@@ -290,6 +331,7 @@
             document.getElementById("level").innerText = `Уровень: ${level}`;
             document.getElementById("energy").style.width = `${(energy / maxEnergy) * 100}%`;
             document.getElementById("energy-text").innerText = `Энергия: ${energy}`;
+            document.getElementById("max-energy-text").innerText = `Макс: ${maxEnergy}`;
         }
 
         document.getElementById("upgrade-energy").addEventListener("click", () => {
@@ -337,6 +379,33 @@
         }
 
         loadUserData(); // Загружаем данные пользователя при загрузке страницы
+
+        // Навигация между вкладками
+        document.getElementById("home").addEventListener("click", () => {
+            document.getElementById("game").style.display = 'block';
+            document.getElementById("upgrades").style.display = 'none';
+            document.getElementById("leaderboard").style.display = 'none';
+            setActiveTab('home');
+        });
+        document.getElementById("upgrade").addEventListener("click", () => {
+            document.getElementById("game").style.display = 'none';
+            document.getElementById("upgrades").style.display = 'block';
+            document.getElementById("leaderboard").style.display = 'none';
+            setActiveTab('upgrade');
+        });
+        document.getElementById("leaderboard-tab").addEventListener("click", () => {
+            document.getElementById("game").style.display = 'none';
+            document.getElementById("upgrades").style.display = 'none';
+            document.getElementById("leaderboard").style.display = 'block';
+            setActiveTab('leaderboard-tab');
+        });
+
+        function setActiveTab(tabId) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+        }
     </script>
 </body>
 </html>
