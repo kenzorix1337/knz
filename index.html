@@ -6,7 +6,7 @@
     <title>Тапалка</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Verdana', sans-serif;
             background-color: #1a1a2e;
             color: white;
             display: flex;
@@ -17,6 +17,11 @@
             margin: 0;
             overflow: hidden;
         }
+        
+        {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        }
+        
         h2 {
             margin-bottom: 20px;
             color: white;
@@ -210,7 +215,7 @@
     <!-- Главная часть игры -->
     <div id="game">
         <div id="stats">
-            <div id="score"><span class="icon">💰</span> Клики: 0</div>
+            <div id="score"><span class="icon">💰</span> Очки: 0</div>
             <div id="level"><span class="icon">🏆</span> Уровень: 1</div>
         </div>
 
@@ -230,7 +235,7 @@
         <h2>Улучшения</h2>
         <div class="upgrades">
             <button class="upgrade-btn" id="upgrade-energy">⚡ Макс Энергия - 100 (Уровень: 1)</button>
-            <button class="upgrade-btn" id="upgrade-tap">👆 Клики за Тап - 50 (Уровень: 1)</button>
+            <button class="upgrade-btn" id="upgrade-tap">👆 Очки за Тап - 50 (Уровень: 1)</button>
         </div>
     </div>
 
@@ -245,8 +250,8 @@
     <!-- Вкладка с заданиями -->
     <div id="quests" style="display: none;">
         <h2>Задания</h2>
-        <p>Подпишись на наш Telegram канал и получи бонус:</p>
-        <button class="button" onclick="window.open('https://t.me/your_channel', '_blank')">Подписаться на канал</button>
+        <p>Доступные задания:</p>
+        <button class="button" onclick="window.open('https://t.me/whopperkombat', '_blank')">Подписаться на канал</button>
     </div>
 
     <!-- Панель навигации -->
@@ -341,13 +346,13 @@
         }
 
         function updateUI() {
-            document.getElementById("score").innerText = `Клики: ${taps}`;
+            document.getElementById("score").innerText = `Очки: ${taps}`;
             document.getElementById("level").innerText = `Уровень: ${level}`;
             document.getElementById("energy").style.width = `${(energy / maxEnergy) * 100}%`;
             document.getElementById("energy-text").innerText = `Энергия: ${energy}`;
             document.getElementById("max-energy-text").innerText = `Макс: ${maxEnergy}`;
             document.getElementById("upgrade-energy").innerText = `⚡ Макс Энергия - ${upgradeEnergyLevel * 100} (Уровень: ${upgradeEnergyLevel})`;
-            document.getElementById("upgrade-tap").innerText = `👆 Клики за Тап - ${upgradeTapLevel * 50} (Уровень: ${upgradeTapLevel})`;
+            document.getElementById("upgrade-tap").innerText = `👆 Очки за Тап - ${upgradeTapLevel * 50} (Уровень: ${upgradeTapLevel})`;
         }
 
         document.getElementById("upgrade-energy").addEventListener("click", () => {
@@ -359,7 +364,7 @@
                 saveGame(); // Сохраняем данные после улучшения
                 updateUI();
             } else {
-                alert("Недостаточно кликов для улучшения!");
+                alert("Недостаточно очков для улучшения!");
             }
         });
 
@@ -372,7 +377,7 @@
                 saveGame(); // Сохраняем данные после улучшения
                 updateUI();
             } else {
-                alert("Недостаточно кликов для улучшения!");
+                alert("Недостаточно очков для улучшения!");
             }
         });
 
@@ -409,7 +414,7 @@
                 const data = doc.data();
                 const leaderboardItem = document.createElement("div");
                 leaderboardItem.className = "leaderboard-item";
-                leaderboardItem.innerText = `Игрок: ${doc.id}, Клики: ${data.taps}`;
+                leaderboardItem.innerText = `Игрок: ${doc.id}, Очки: ${data.taps}`;
                 leaderboardList.appendChild(leaderboardItem);
             });
         }
