@@ -46,7 +46,6 @@
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
             position: relative;
         }
-        /* Анимация для бургера */
         #burger:active {
             transform: scale(0.95);
         }
@@ -190,19 +189,26 @@
         #energy-bar .icon {
             color: #76c7c0;
         }
-
-        /* Стиль для хитмаркера */
         .hitmarker {
             position: absolute;
             font-size: 30px;
             color: #ff9800;
             animation: hitMarkerAnimation 0.5s ease-out;
         }
-
-        /* Анимация для хитмаркера */
         @keyframes hitMarkerAnimation {
             0% { opacity: 1; transform: translateY(0) scale(1); }
             100% { opacity: 0; transform: translateY(-30px) scale(0.5); }
+        }
+        /* Кнопка задания с подпиской */
+        .quest-btn {
+            background-color: #0077b6;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: center;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -213,9 +219,7 @@
             <div id="score"><span class="icon">💰</span> Клики: 0</div>
             <div id="level"><span class="icon">🏆</span> Уровень: 1</div>
         </div>
-
         <div id="burger"></div>
-
         <div id="energy-bar-container">
             <div id="energy-bar">
                 <div id="energy"></div>
@@ -242,170 +246,220 @@
         </div>
     </div>
 
+    <!-- Вкладка с заданиями -->
+    <div id="quests" style="display: none;">
+        <h2>Задания</h2>
+        <div class="quest-btn" id="subscribe-quest">
+            Подписаться на Telegram канал
+        </div>
+    </div>
+
     <!-- Панель навигации -->
     <div class="nav-panel">
         <div class="nav-item active" id="home">🏠</div>
         <div class="nav-item" id="upgrade">🚀</div>
         <div class="nav-item" id="leaderboard-tab">🏆</div>
+        <div class="nav-item" id="quests-tab">📜</div>
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
 
-        // Firebase настройки
-        const firebaseConfig = {
+    <script>
+        // Firebase конфигурация
+        var firebaseConfig = {
             apiKey: "AIzaSyDndBcV29tFvBX-RGzCIAUVEnVy8G5GdJc",
             authDomain: "whopper-a32f7.firebaseapp.com",
             projectId: "whopper-a32f7",
             storageBucket: "whopper-a32f7.appspot.com",
             messagingSenderId: "701387895307",
             appId: "1:701387895307:web:cc656083f5f0ed1c590d0e",
-            measurementId: "G-MEASUREMENT_ID"
+            measurementId: "G-PQ6JZEZMEP"
         };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const telegram = window.Telegram.WebApp;
-
-        // Инициализация переменных
-        let taps = 0;
+        // Переменные игры
+        let clicks = 0;
         let level = 1;
         let energy = 3000;
         let maxEnergy = 3000;
-        let pointsPerClick = 1;
-        let upgradeCost = 50;
-        let userId = telegram.initDataUnsafe.user.id;
+        let clicksPerTap = 1;
+        let lastEnergyUpdate = Date.now();
 
-        // Восстановление энергии каждые 3 секунды
-        setInterval(() => {
-            if (energy < maxEnergy) {
-                energy += 10; // Количество восстанавливаемой энергии
-                if (energy > maxEnergy) {
-                    energy = maxEnergy;
-                }
-                updateUI();
-            }
-        }, 3000);
-
-        // Обработчик нажатия на бургер
-        document.getElementById("burger").addEventListener("click", async (event) => {
-            if (energy >= pointsPerClick) {
-                taps += pointsPerClick;
-                energy -= pointsPerClick;
-
-                // Добавление хитмаркера
-                const hitmarker = document.createElement('div');
-                hitmarker.innerText = "+1";
-                hitmarker.classList.add('hitmarker');
-                hitmarker.style.left = `${event.clientX - 15}px`; // Позиционируем хитмаркер
-                hitmarker.style.top = `${event.clientY - 15}px`;
-                document.body.appendChild(hitmarker);
-
-                setTimeout(() => hitmarker.remove(), 500); // Убираем через 0.5 секунды
-
-                await saveGame(); // Сохраняем игру после каждого нажатия
-                updateUI();
-            } else {
-                alert("Не хватает энергии!");
-            }
-        });
-
-        async function saveGame() {
-            try {
-                await setDoc(doc(db, "players", userId.toString()), {
-                    taps: taps,
+        // Обновление данных игрока в Firebase
+        function updatePlayerData() {
+            const user = firebase.auth().currentUser;
+            if (user) {
+                db.collection('players').doc(user.uid).set({
+                    clicks: clicks,
                     level: level,
                     energy: energy,
-                    maxEnergy: maxEnergy
+                    maxEnergy: maxEnergy,
+                    clicksPerTap: clicksPerTap,
+                    lastEnergyUpdate: lastEnergyUpdate
                 }, { merge: true });
-                console.log("Данные успешно сохранены!");
-            } catch (e) {
-                console.error("Ошибка сохранения данных: ", e);
             }
         }
 
-        function updateUI() {
-            document.getElementById("score").innerText = `Клики: ${taps}`;
-            document.getElementById("level").innerText = `Уровень: ${level}`;
-            document.getElementById("energy").style.width = `${(energy / maxEnergy) * 100}%`;
-            document.getElementById("energy-text").innerText = `Энергия: ${energy}`;
-            document.getElementById("max-energy-text").innerText = `Макс: ${maxEnergy}`;
-        }
-
-        document.getElementById("upgrade-energy").addEventListener("click", () => {
-            if (taps >= upgradeCost) {
-                maxEnergy += 100;
-                taps -= upgradeCost;
-                upgradeCost += 50; // Увеличиваем стоимость следующего улучшения
-                alert("Максимальная энергия увеличена!");
-                saveGame(); // Сохраняем данные после улучшения
-                updateUI();
-            } else {
-                alert("Недостаточно кликов для улучшения!");
-            }
-        });
-
-        document.getElementById("upgrade-tap").addEventListener("click", () => {
-            if (taps >= upgradeCost) {
-                pointsPerClick += 1;
-                taps -= upgradeCost;
-                alert("Клики за тап увеличены!");
-                saveGame(); // Сохраняем данные после улучшения
-                updateUI();
-            } else {
-                alert("Недостаточно кликов для улучшения!");
-            }
-        });
-
-        // Загрузка данных пользователя
-        async function loadUserData() {
-            const docRef = doc(db, "players", userId.toString());
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                taps = data.taps || 0;
-                level = data.level || 1;
-                energy = data.energy || 3000;
-                maxEnergy = data.maxEnergy || 3000;
-                pointsPerClick = data.pointsPerClick || 1;
-                upgradeCost = data.upgradeCost || 50;
-                updateUI();
-            } else {
-                console.log("Пользователь не найден, создаем нового.");
-                await saveGame(); // Создаем нового пользователя, если данных нет
+        // Получение данных игрока из Firebase
+        function loadPlayerData() {
+            const user = firebase.auth().currentUser;
+            if (user) {
+                db.collection('players').doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        clicks = data.clicks || 0;
+                        level = data.level || 1;
+                        energy = data.energy || 3000;
+                        maxEnergy = data.maxEnergy || 3000;
+                        clicksPerTap = data.clicksPerTap || 1;
+                        lastEnergyUpdate = data.lastEnergyUpdate || Date.now();
+                        updateUI();
+                    }
+                });
             }
         }
 
-        loadUserData(); // Загружаем данные пользователя при загрузке страницы
-
-        // Навигация между вкладками
-        document.getElementById("home").addEventListener("click", () => {
-            document.getElementById("game").style.display = 'block';
-            document.getElementById("upgrades").style.display = 'none';
-            document.getElementById("leaderboard").style.display = 'none';
-            setActiveTab('home');
-        });
-        document.getElementById("upgrade").addEventListener("click", () => {
-            document.getElementById("game").style.display = 'none';
-            document.getElementById("upgrades").style.display = 'block';
-            document.getElementById("leaderboard").style.display = 'none';
-            setActiveTab('upgrade');
-        });
-        document.getElementById("leaderboard-tab").addEventListener("click", () => {
-            document.getElementById("game").style.display = 'none';
-            document.getElementById("upgrades").style.display = 'none';
-            document.getElementById("leaderboard").style.display = 'block';
-            setActiveTab('leaderboard-tab');
-        });
-
-        function setActiveTab(tabId) {
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
+        // Вход через Google
+        function googleSignIn() {
+            var provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider).then((result) => {
+                loadPlayerData();
             });
-            document.getElementById(tabId).classList.add('active');
         }
+
+        // Вход анонимный
+        firebase.auth().signInAnonymously().then(() => {
+            loadPlayerData();
+        });
+
+        // Обновление интерфейса
+        function updateUI() {
+            document.getElementById('score').innerHTML = `<span class="icon">💰</span> Клики: ${clicks}`;
+            document.getElementById('level').innerHTML = `<span class="icon">🏆</span> Уровень: ${level}`;
+            document.getElementById('energy-text').textContent = `Энергия: ${energy}`;
+            document.getElementById('max-energy-text').textContent = `Макс: ${maxEnergy}`;
+            document.getElementById('energy').style.width = `${(energy / maxEnergy) * 100}%`;
+        }
+
+        // Клик по бургеру
+        document.getElementById('burger').addEventListener('click', () => {
+            if (energy >= 10) {
+                clicks += clicksPerTap;
+                energy -= 10;
+                updateUI();
+                spawnHitMarker();
+                updatePlayerData();
+            } else {
+                alert("Недостаточно энергии!");
+            }
+        });
+
+        // Появление хитмаркера
+        function spawnHitMarker() {
+            const hitmarker = document.createElement('div');
+            hitmarker.className = 'hitmarker';
+            hitmarker.textContent = `+${clicksPerTap}`;
+            hitmarker.style.left = `${Math.random() * 80 + 10}%`;
+            hitmarker.style.top = `${Math.random() * 80 + 10}%`;
+            document.body.appendChild(hitmarker);
+            setTimeout(() => hitmarker.remove(), 500);
+        }
+
+        // Восстановление энергии каждые 1 секунду
+        setInterval(() => {
+            const now = Date.now();
+            const elapsedSeconds = Math.floor((now - lastEnergyUpdate) / 1000);
+            const recoveredEnergy = elapsedSeconds * 10; // 10 энергии в секунду
+            if (energy < maxEnergy) {
+                energy = Math.min(energy + recoveredEnergy, maxEnergy);
+                lastEnergyUpdate = now;
+                updateUI();
+                updatePlayerData();
+            }
+        }, 1000);
+
+        // Улучшение энергии
+        document.getElementById('upgrade-energy').addEventListener('click', () => {
+            if (clicks >= 100) {
+                clicks -= 100;
+                maxEnergy += 500;
+                updateUI();
+                updatePlayerData();
+            } else {
+                alert("Недостаточно кликов!");
+            }
+        });
+
+        // Улучшение кликов за тап
+        document.getElementById('upgrade-tap').addEventListener('click', () => {
+            if (clicks >= 50) {
+                clicks -= 50;
+                clicksPerTap += 1;
+                updateUI();
+                updatePlayerData();
+            } else {
+                alert("Недостаточно кликов!");
+            }
+        });
+
+        // Переключение между вкладками
+        document.getElementById('home').addEventListener('click', () => {
+            showTab('game', 'home');
+        });
+        document.getElementById('upgrade').addEventListener('click', () => {
+            showTab('upgrades', 'upgrade');
+        });
+        document.getElementById('leaderboard-tab').addEventListener('click', () => {
+            showTab('leaderboard', 'leaderboard-tab');
+            loadLeaderboard();
+        });
+        document.getElementById('quests-tab').addEventListener('click', () => {
+            showTab('quests', 'quests-tab');
+        });
+
+        function showTab(tabId, navId) {
+            document.getElementById('game').style.display = 'none';
+            document.getElementById('upgrades').style.display = 'none';
+            document.getElementById('leaderboard').style.display = 'none';
+            document.getElementById('quests').style.display = 'none';
+            document.getElementById(tabId).style.display = 'block';
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(navId).classList.add('active');
+        }
+
+        // Загрузка топ игроков
+        function loadLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboard-list');
+            leaderboardList.innerHTML = '';
+
+            db.collection('players')
+                .orderBy('clicks', 'desc')
+                .limit(100)
+                .get()
+                .then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        const player = doc.data();
+                        const playerDiv = document.createElement('div');
+                        playerDiv.className = 'player';
+                        playerDiv.innerHTML = `
+                            <div class="player-icon">${player.name ? player.name.charAt(0) : '?'}</div>
+                            <div class="player-name">${player.name || 'Аноним'}</div>
+                            <div class="player-clicks">${player.clicks} кликов</div>
+                        `;
+                        leaderboardList.appendChild(playerDiv);
+                    });
+                });
+        }
+
+        // Кнопка подписки
+        document.getElementById('subscribe-quest').addEventListener('click', () => {
+            window.open('https://t.me/your_channel', '_blank');
+        });
+
     </script>
 </body>
 </html>
