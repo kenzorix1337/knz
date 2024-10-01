@@ -5,8 +5,205 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Тапалка</title>
     <style>
-        /* Все стили остаются как прежде */
-        /* ... */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1a1a2e;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: white;
+        }
+        .button {
+            background-color: #ff9800;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 0;
+            width: 80%;
+            max-width: 300px;
+        }
+        #burger {
+            width: 50vw;
+            height: 50vw;
+            max-width: 400px;
+            max-height: 400px;
+            background-image: url('whoppe.png');
+            background-size: cover;
+            margin: 30px;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        /* Анимация для бургера */
+        #burger:active {
+            transform: scale(0.95);
+        }
+        #stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+            color: white;
+            font-weight: bold;
+        }
+        #energy-bar-container {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+            text-align: center;
+            position: relative;
+        }
+        #energy-bar {
+            width: 100%;
+            background-color: #333;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+            position: relative;
+            height: 40px;
+        }
+        #energy {
+            height: 100%;
+            background-color: #76c7c0;
+            width: 100%;
+            border-radius: 20px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            transition: width 0.3s ease;
+        }
+        #energy-text {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        #max-energy-text {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .upgrades {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .upgrade-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 200px;
+            margin-bottom: 10px;
+        }
+        .nav-panel {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 600px;
+            background-color: #333;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+        }
+        .nav-item {
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 24px;
+            flex: 1;
+            text-align: center;
+        }
+        .nav-item.active {
+            background-color: #ff9800;
+        }
+        .leaderboard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .player {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px;
+            background-color: #2d2d44;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+        .player-icon {
+            background-color: #ff9800;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: white;
+            margin-right: 10px;
+        }
+        .player-name {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        .player-clicks {
+            color: #ffeb3b;
+        }
+        .icon {
+            margin-right: 5px;
+        }
+        #score .icon {
+            color: gold;
+        }
+        #level .icon {
+            color: #ffeb3b;
+        }
+        #energy-bar .icon {
+            color: #76c7c0;
+        }
+
+        /* Стиль для хитмаркера */
+        .hitmarker {
+            position: absolute;
+            font-size: 30px;
+            color: #ff9800;
+            animation: hitMarkerAnimation 0.5s ease-out;
+        }
+
+        /* Анимация для хитмаркера */
+        @keyframes hitMarkerAnimation {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-30px) scale(0.5); }
+        }
     </style>
 </head>
 <body>
